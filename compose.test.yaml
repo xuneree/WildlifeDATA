@@ -1,0 +1,5 @@
+# Development/test override only. The standard deployment does not publish the database.
+services:
+  db:
+    ports:
+      - "127.0.0.1:55432:5432"

@@ -1,0 +1,1218 @@
+{
+  "camera_site": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "site_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "位点业务编号；推荐在当前单区域体系下唯一"
+    },
+    {
+      "name": "region",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "监测区域"
+    },
+    {
+      "name": "first_deployed_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "位点首次布设时间"
+    },
+    {
+      "name": "deployment_type",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "—",
+      "description": "single / paired"
+    },
+    {
+      "name": "longitude",
+      "type": "DOUBLE PRECISION",
+      "required": "可空",
+      "default": "—",
+      "description": "WGS84 经度；-180 到 180"
+    },
+    {
+      "name": "latitude",
+      "type": "DOUBLE PRECISION",
+      "required": "可空",
+      "default": "—",
+      "description": "WGS84 纬度；-90 到 90"
+    },
+    {
+      "name": "elevation_m",
+      "type": "NUMERIC(8,2)",
+      "required": "可空",
+      "default": "—",
+      "description": "海拔（米）"
+    },
+    {
+      "name": "terrain_type",
+      "type": "VARCHAR(50)",
+      "required": "可空",
+      "default": "—",
+      "description": "地形类型"
+    },
+    {
+      "name": "vegetation_type",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "植被类型"
+    },
+    {
+      "name": "environment_type",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "兽径/道路等"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "camera_deployment": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "site_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → camera_site.id"
+    },
+    {
+      "name": "device_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "同位点相机编号，如 701A / 701B"
+    },
+    {
+      "name": "device_type",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "相机型号；历史换型在各周期独立记录"
+    },
+    {
+      "name": "work_start_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "该回收批次对应工作的起始时间"
+    },
+    {
+      "name": "work_end_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "有效工作的终止时间；不盲目等于回收日期"
+    },
+    {
+      "name": "maintenance_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "期末维护日期"
+    },
+    {
+      "name": "maintenance_by",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "维护工作人员；初期用姓名文本"
+    },
+    {
+      "name": "data_retrieval_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "期末取回数据的日期"
+    },
+    {
+      "name": "data_retrieval_batch",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "—",
+      "description": "如 202608"
+    },
+    {
+      "name": "data_retrieval_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "—",
+      "description": "retrieved / not_retrieved"
+    },
+    {
+      "name": "issue_type",
+      "type": "VARCHAR(50)",
+      "required": "可空",
+      "default": "—",
+      "description": "异常主类型，正常为空"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "其他异常或回收说明"
+    }
+  ],
+  "media_asset": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "camera_deployment_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → camera_deployment.id"
+    },
+    {
+      "name": "media_type",
+      "type": "VARCHAR(10)",
+      "required": "必填",
+      "default": "—",
+      "description": "video / image"
+    },
+    {
+      "name": "filename",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "原始文件名"
+    },
+    {
+      "name": "storage_path",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "平台管理的文件路径或存储键"
+    },
+    {
+      "name": "file_size_bytes",
+      "type": "BIGINT",
+      "required": "可空",
+      "default": "—",
+      "description": "文件字节数"
+    },
+    {
+      "name": "file_hash",
+      "type": "VARCHAR(64)",
+      "required": "可空",
+      "default": "—",
+      "description": "SHA-256 文件哈希，支持一致性核验"
+    },
+    {
+      "name": "captured_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "首次从原始文件修改时间读入；保留原值"
+    },
+    {
+      "name": "time_corrected_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "人工校准后的拍摄时间"
+    },
+    {
+      "name": "duration_seconds",
+      "type": "NUMERIC(12,3)",
+      "required": "可空",
+      "default": "—",
+      "description": "视频时长，图片为空"
+    },
+    {
+      "name": "width",
+      "type": "INTEGER",
+      "required": "可空",
+      "default": "—",
+      "description": "宽度像素"
+    },
+    {
+      "name": "height",
+      "type": "INTEGER",
+      "required": "可空",
+      "default": "—",
+      "description": "高度像素"
+    },
+    {
+      "name": "codec",
+      "type": "VARCHAR(50)",
+      "required": "可空",
+      "default": "—",
+      "description": "视频编码"
+    },
+    {
+      "name": "individual_annotation_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "unannotated",
+      "description": "unannotated / annotated"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "首次纳入平台时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "media_derivative": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → media_asset.id"
+    },
+    {
+      "name": "derivative_type",
+      "type": "VARCHAR(30)",
+      "required": "必填",
+      "default": "—",
+      "description": "proxy_video / thumbnail / frame_capture"
+    },
+    {
+      "name": "filename",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "派生文件名"
+    },
+    {
+      "name": "storage_path",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "派生文件存储键"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "创建时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "species": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "species_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "稳定物种代码"
+    },
+    {
+      "name": "common_name",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "显示名称"
+    },
+    {
+      "name": "scientific_name",
+      "type": "VARCHAR(200)",
+      "required": "可空",
+      "default": "—",
+      "description": "拉丁学名"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "分类变化及其他备注"
+    }
+  ],
+  "annotation_import": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "imported_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "导入执行时间"
+    },
+    {
+      "name": "imported_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "执行上传的人员"
+    },
+    {
+      "name": "annotated_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "该批原始物种标注人员"
+    },
+    {
+      "name": "review_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "unreviewed",
+      "description": "unreviewed / reviewed"
+    },
+    {
+      "name": "reviewed_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "该批复核人员"
+    },
+    {
+      "name": "total_file_count",
+      "type": "INTEGER",
+      "required": "必填",
+      "default": "0",
+      "description": "本次处理的 XMP 数量"
+    },
+    {
+      "name": "success_file_count",
+      "type": "INTEGER",
+      "required": "必填",
+      "default": "0",
+      "description": "成功文件数"
+    },
+    {
+      "name": "failed_file_count",
+      "type": "INTEGER",
+      "required": "必填",
+      "default": "0",
+      "description": "失败文件数"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "species_annotation": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → media_asset.id"
+    },
+    {
+      "name": "species_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → species.id"
+    },
+    {
+      "name": "annotated_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "物种标注人"
+    },
+    {
+      "name": "review_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "unreviewed",
+      "description": "unreviewed / reviewed"
+    },
+    {
+      "name": "reviewed_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "复核人"
+    },
+    {
+      "name": "annotation_import_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → annotation_import.id"
+    },
+    {
+      "name": "imported_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "—",
+      "description": "该标注最后生效的导入时间"
+    }
+  ],
+  "annotation_import_item": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "annotation_import_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → annotation_import.id"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "成功匹配时关联媒体；失败时可空"
+    },
+    {
+      "name": "source_filename",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "被导入的 XMP 或匹配文件名"
+    },
+    {
+      "name": "import_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "—",
+      "description": "success / failed / skipped"
+    },
+    {
+      "name": "species_codes",
+      "type": "JSONB",
+      "required": "可空",
+      "default": "—",
+      "description": "此次解析的物种代码数组快照"
+    },
+    {
+      "name": "previous_species_codes",
+      "type": "JSONB",
+      "required": "可空",
+      "default": "—",
+      "description": "替换前的物种代码数组快照"
+    },
+    {
+      "name": "error_message",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "失败原因"
+    }
+  ],
+  "tag": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "tag_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "唯一标识，如 unknown_individual"
+    },
+    {
+      "name": "tag_name",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "显示名称"
+    },
+    {
+      "name": "tag_type",
+      "type": "VARCHAR(30)",
+      "required": "可空",
+      "default": "—",
+      "description": "标签分组，例如 individual / material"
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "标签说明"
+    }
+  ],
+  "media_tag": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → media_asset.id"
+    },
+    {
+      "name": "tag_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → tag.id"
+    },
+    {
+      "name": "tagged_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "添加标签的人员"
+    },
+    {
+      "name": "tagged_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "加入标签时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "individual": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "individual_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "当前个体编号"
+    },
+    {
+      "name": "species_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → species.id"
+    },
+    {
+      "name": "profile_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "FK → individual_profile.id，当前代表图"
+    },
+    {
+      "name": "sex",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "unknown",
+      "description": "male / female / unknown"
+    },
+    {
+      "name": "birth_date_from",
+      "type": "DATE",
+      "required": "可空",
+      "default": "—",
+      "description": "推测出生日期下界"
+    },
+    {
+      "name": "birth_date_to",
+      "type": "DATE",
+      "required": "可空",
+      "default": "—",
+      "description": "推测出生日期上界"
+    },
+    {
+      "name": "life_status",
+      "type": "VARCHAR(30)",
+      "required": "必填",
+      "default": "unknown",
+      "description": "alive / confirmed_dead / unknown"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "档案备注"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "建档时间"
+    }
+  ],
+  "individual_profile": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "individual_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → individual.id"
+    },
+    {
+      "name": "filename",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "拼合图文件名"
+    },
+    {
+      "name": "storage_path",
+      "type": "TEXT",
+      "required": "必填",
+      "default": "—",
+      "description": "拼合图存储位置"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "存入时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "说明"
+    }
+  ],
+  "individual_alias": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "individual_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → individual.id"
+    },
+    {
+      "name": "alias_code",
+      "type": "VARCHAR(50)",
+      "required": "必填",
+      "default": "—",
+      "description": "历史编号"
+    },
+    {
+      "name": "changed_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "停用/变更时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "individual_occurrence": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → media_asset.id"
+    },
+    {
+      "name": "individual_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → individual.id"
+    },
+    {
+      "name": "annotated_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "人工确认人员"
+    },
+    {
+      "name": "annotated_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "标注时间"
+    },
+    {
+      "name": "review_status",
+      "type": "VARCHAR(20)",
+      "required": "必填",
+      "default": "unreviewed",
+      "description": "unreviewed / reviewed"
+    },
+    {
+      "name": "reviewed_by",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "复核人员"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "individual_relationship": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "individual_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "关系主体"
+    },
+    {
+      "name": "related_individual_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "关系客体"
+    },
+    {
+      "name": "relationship_type",
+      "type": "VARCHAR(30)",
+      "required": "必填",
+      "default": "—",
+      "description": "如 mother_of / father_of / sibling_of"
+    },
+    {
+      "name": "confidence_level",
+      "type": "VARCHAR(20)",
+      "required": "可空",
+      "default": "—",
+      "description": "confirmed / inferred 等"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "证据说明"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "创建时间"
+    }
+  ],
+  "breeding_event": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "event_code",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "繁殖业务编号，不以其作为主键"
+    },
+    {
+      "name": "mother_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → individual.id"
+    },
+    {
+      "name": "father_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "FK → individual.id"
+    },
+    {
+      "name": "breeding_year",
+      "type": "INTEGER",
+      "required": "可空",
+      "default": "—",
+      "description": "繁殖年度"
+    },
+    {
+      "name": "birth_date_from",
+      "type": "DATE",
+      "required": "可空",
+      "default": "—",
+      "description": "推测出生日期下界"
+    },
+    {
+      "name": "birth_date_to",
+      "type": "DATE",
+      "required": "可空",
+      "default": "—",
+      "description": "推测出生日期上界"
+    },
+    {
+      "name": "first_observed_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "首次发现幼崽的影像时间"
+    },
+    {
+      "name": "cub_count_observed",
+      "type": "INTEGER",
+      "required": "可空",
+      "default": "—",
+      "description": "观察到的幼崽数量，不等于总出生数量"
+    },
+    {
+      "name": "birth_site_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "FK → camera_site.id；推测出生点位"
+    },
+    {
+      "name": "maternal_solo_activity_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "母兽产崽后首次观察到独立活动的时间"
+    },
+    {
+      "name": "breeding_status",
+      "type": "VARCHAR(30)",
+      "required": "可空",
+      "default": "—",
+      "description": "繁殖事件状态；具体取值待定"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "breeding_offspring": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "breeding_event_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → breeding_event.id"
+    },
+    {
+      "name": "individual_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "已建立个体档案则关联 individual.id"
+    },
+    {
+      "name": "temporary_cub_code",
+      "type": "VARCHAR(50)",
+      "required": "可空",
+      "default": "—",
+      "description": "事件内历史幼崽编号"
+    },
+    {
+      "name": "independence_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "推测独立日期"
+    },
+    {
+      "name": "last_observed_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "幼崽最后观察日期"
+    },
+    {
+      "name": "survival_status",
+      "type": "VARCHAR(20)",
+      "required": "可空",
+      "default": "—",
+      "description": "alive / confirmed_dead / unknown"
+    },
+    {
+      "name": "territory_established_status",
+      "type": "VARCHAR(20)",
+      "required": "可空",
+      "default": "—",
+      "description": "confirmed / unconfirmed / unknown"
+    },
+    {
+      "name": "territory_established_at",
+      "type": "TIMESTAMPTZ",
+      "required": "可空",
+      "default": "—",
+      "description": "确认建立领地的时间"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "备注"
+    }
+  ],
+  "breeding_evidence": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "breeding_event_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → breeding_event.id"
+    },
+    {
+      "name": "media_id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "FK → media_asset.id"
+    },
+    {
+      "name": "evidence_type",
+      "type": "VARCHAR(50)",
+      "required": "可空",
+      "default": "—",
+      "description": "影像证据类型"
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "required": "可空",
+      "default": "—",
+      "description": "证据解释"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "登记时间"
+    }
+  ],
+  "app_user": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "username",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "登录名"
+    },
+    {
+      "name": "display_name",
+      "type": "VARCHAR(100)",
+      "required": "可空",
+      "default": "—",
+      "description": "展示姓名"
+    },
+    {
+      "name": "is_active",
+      "type": "BOOLEAN",
+      "required": "必填",
+      "default": "true",
+      "description": "账号是否启用"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "创建时间"
+    }
+  ],
+  "audit_log": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "required": "必填",
+      "default": "—",
+      "description": "主键"
+    },
+    {
+      "name": "actor_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "操作账号，FK → app_user.id；历史外部导入允许为空"
+    },
+    {
+      "name": "action",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "动作代码"
+    },
+    {
+      "name": "entity_type",
+      "type": "VARCHAR(100)",
+      "required": "必填",
+      "default": "—",
+      "description": "业务实体类型"
+    },
+    {
+      "name": "entity_id",
+      "type": "UUID",
+      "required": "可空",
+      "default": "—",
+      "description": "对象 id"
+    },
+    {
+      "name": "before_data",
+      "type": "JSONB",
+      "required": "可空",
+      "default": "—",
+      "description": "变更前的关键字段快照"
+    },
+    {
+      "name": "after_data",
+      "type": "JSONB",
+      "required": "可空",
+      "default": "—",
+      "description": "变更后的关键字段快照"
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMPTZ",
+      "required": "必填",
+      "default": "now()",
+      "description": "操作发生时间"
+    }
+  ]
+}
