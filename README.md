@@ -2,7 +2,7 @@
 
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
 需求基准为附件 V1.2；原始文档及提取文本保存在 [docs/source](docs/source)。
-模块 01 以已审阅的[详细需求 V1.0](docs/requirements/01-camera-sites-and-retrieval.md)及同步的[数据库设计 V1.3](docs/design/wildlife_database_design_v1_3.md)为最新文档基线；[Word 版](docs/design/wildlife_database_design_v1_3.docx)同步提供。新版设计尚未迁移到运行数据库。
+模块 01 以已审阅的[详细需求 V1.1（含批量录入工作方式补充）](docs/requirements/01-camera-sites-and-retrieval.md)及同步的[数据库设计 V1.3](docs/design/wildlife_database_design_v1_3.md)为最新文档基线；[Word 版](docs/design/wildlife_database_design_v1_3.docx)同步提供。新版设计尚未迁移到运行数据库。
 
 当前可以完成：管理员登录 → 建立相机位点 → 记录工作与回收周期 → 建立物种和个体档案 → 查看监测概览。
 支持新增/列表 API、区域只读账号、精确坐标权限和新增操作审计。
@@ -94,3 +94,7 @@ python3 scripts/test-backend.py --env-file /workspace/.wildlife-data.env
 
 具体功能状态、文档冲突与待验证事项见 [实施清单](docs/implementation.md)。
 下一阶段优先实现原始媒体索引与播放、XMP 和 Excel 导入，并用真实样例验证匹配规则与事务覆盖。
+
+## 模块 01 设计评审
+
+[低保真原型与使用说明](docs/prototypes/module01/README.md)提供可离线打开的单文件 HTML、九页 PDF 和页面截图。原型使用示例数据，不连接正式业务 API。
