@@ -2,6 +2,7 @@
 
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
 需求基准为附件 V1.2；原始文档及提取文本保存在 [docs/source](docs/source)。
+模块 01 以已审阅的[详细需求 V1.0](docs/requirements/01-camera-sites-and-retrieval.md)及同步的[数据库设计 V1.3](docs/design/wildlife_database_design_v1_3.md)为最新文档基线；[Word 版](docs/design/wildlife_database_design_v1_3.docx)同步提供。新版设计尚未迁移到运行数据库。
 
 当前可以完成：管理员登录 → 建立相机位点 → 记录工作与回收周期 → 建立物种和个体档案 → 查看监测概览。
 支持新增/列表 API、区域只读账号、精确坐标权限和新增操作审计。
