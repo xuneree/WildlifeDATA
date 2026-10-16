@@ -2,7 +2,7 @@
 
 V1.3 · 2026-10-16 · 平台业务框架与功能分期修订版
 
-本版依据用户提供的业务逻辑图与九项功能模块整理，作为全平台最新需求基线。模块 01 已确认细节继续遵循[位点与回收详细需求 V1.1](01-camera-sites-and-retrieval.md)，数据库对应[设计 V1.4](../design/wildlife_database_design_v1_4.md)。[总体需求 Word V1.3](../source/camera_trap_data_management_requirements_v1_3.docx)的文件名与文档内版本统一为 V1.3；原始 V1.2 另存于 `docs/source/archive`，仅供追溯。本文描述建设目标，不表示功能已经实现。
+本版依据用户提供的业务逻辑图与九项功能模块整理，作为全平台最新需求基线。模块 01 已确认细节继续遵循[位点与回收详细需求 V1.1](01-camera-sites-and-retrieval.md)，数据库对应[设计 V1.4](../design/wildlife_database_design_v1_4.md)。[总体需求 Word V1.3](platform-requirements-v1_3.docx)与本文件同存于 `docs/requirements`；`docs/source` 保留项目创建时提供的原始 V1.2 文档，仅供追溯，后续修订不覆盖原始资料。本文描述建设目标，不表示功能已经实现。
 
 ## 1. 项目目标与业务逻辑
 

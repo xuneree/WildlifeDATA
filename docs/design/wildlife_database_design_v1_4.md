@@ -6,7 +6,7 @@ V1.4  |  2026年10月16日  |  PostgreSQL + PostGIS
 
 ## 1. 文档定位与范围
 
-版本：V1.4（平台业务框架与功能分期同步版）；日期：2026-10-16。技术基线为 PostgreSQL + PostGIS。总体范围以[需求 V1.3](../requirements/platform-requirements-v1_3.md)及用户本次业务逻辑图为准；模块 01 保留已审阅详细需求 V1.1 的规则。本次仅修订设计文档，未执行数据库迁移，现有程序仍可能使用初始字段。V1.2 原始需求附件另存于 docs/source/archive，V1.3 数据库设计保留用于追溯。
+版本：V1.4（平台业务框架与功能分期同步版）；日期：2026-10-16。技术基线为 PostgreSQL + PostGIS。总体范围以[需求 V1.3](../requirements/platform-requirements-v1_3.md)及用户本次业务逻辑图为准；模块 01 保留已审阅详细需求 V1.1 的规则。本次仅修订设计文档，未执行数据库迁移，现有程序仍可能使用初始字段。V1.2 原始需求附件保留于 docs/source，V1.3 数据库设计保留用于追溯。
 
 当前业务链：位点与回收记录 → NAS 影像管理 → 一期 XMP 物种标签导入 → 一期 Excel 个体标签导入 → 豹个体档案及亲缘关系 → 数据查询与统计（含物种 RAI）。二期增加人工个体标注工具、繁殖记录、可视化与报告；素材库待定。物种 AI 识别与人工复核是后续可扩展方向，未指定交付阶段，不纳入一期或二期必验范围。视频占多数；XMP 为文件级物种标签，不含数量、帧时段或检测框。
 
@@ -594,7 +594,7 @@ region 自由文本替换为明确两级区域 ID；迁移前确认原值映射�
 
 ## 13. 文档来源与版本（历史基线）
 
-需求基线：docs/requirements/01-camera-sites-and-retrieval.md V1.0；用户审阅原件：docs/reviews/module01-reviewed-2026-10-15.md。初始数据库设计 V1.2 原件保留在 docs/source；原始需求 V1.2 已另存于 docs/source/archive。V1.3 的 Markdown 与 Word 从同一修订内容生成。地形/植被/环境固定选项词表仍需补齐；此项不等于业务表设计或代码实现已完成。
+需求基线：docs/requirements/01-camera-sites-and-retrieval.md V1.0；用户审阅原件：docs/reviews/module01-reviewed-2026-10-15.md。初始数据库设计 V1.2 原件保留在 docs/source；原始需求 V1.2 保留于 docs/source。V1.3 的 Markdown 与 Word 从同一修订内容生成。地形/植被/环境固定选项词表仍需补齐；此项不等于业务表设计或代码实现已完成。
 
 
 ## 14. V1.4 新增支撑设计与约束
