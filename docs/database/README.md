@@ -1,6 +1,6 @@
 # 数据库设计
 
-本目录专门保存数据库设计文档，包括实体关系、业务表、字段、约束、索引及迁移设计。交互与界面设计稿放在 [../design](../design)。
+本目录专门保存数据库设计文档，包括实体关系、业务表、字段、约束、索引、迁移设计及对应的评审意见和图件。交互与界面设计稿放在 [../design](../design)。
 
 当前版本：[V1.4 Markdown](wildlife_database_design_v1_4.md) · [V1.4 Word](wildlife_database_design_v1_4.docx)。
 

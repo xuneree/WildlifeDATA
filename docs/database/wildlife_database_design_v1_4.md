@@ -594,7 +594,7 @@ region 自由文本替换为明确两级区域 ID；迁移前确认原值映射�
 
 ## 13. 文档来源与版本（历史基线）
 
-需求基线：docs/requirements/01-camera-sites-and-retrieval.md V1.0；用户审阅原件：docs/reviews/module01-reviewed-2026-10-15.md。初始数据库设计 V1.2 原件保留在 docs/source；原始需求 V1.2 保留于 docs/source。V1.3 的 Markdown 与 Word 从同一修订内容生成。地形/植被/环境固定选项词表仍需补齐；此项不等于业务表设计或代码实现已完成。
+需求基线：docs/requirements/01-camera-sites-and-retrieval.md V1.0；用户审阅原件：docs/requirements/module01-reviewed-2026-10-15.md。初始数据库设计 V1.2 原件保留在 docs/source；原始需求 V1.2 保留于 docs/source。V1.3 的 Markdown 与 Word 从同一修订内容生成。地形/植被/环境固定选项词表仍需补齐；此项不等于业务表设计或代码实现已完成。
 
 
 ## 14. V1.4 新增支撑设计与约束
