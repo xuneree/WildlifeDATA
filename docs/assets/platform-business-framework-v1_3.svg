@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1400" viewBox="0 0 1760 1400"><rect width="1760" height="1400" fill="white"/>
+<text x="345.0" y="54" font-family="Noto Sans CJK SC, sans-serif" font-size="34" font-weight="400" fill="#242830">逻辑示意图</text>
+<text x="1237.0" y="54" font-family="Noto Sans CJK SC, sans-serif" font-size="34" font-weight="400" fill="#242830">功能模块</text>
+<rect x="40" y="95" width="795" height="1235" rx="12" fill="white" stroke="#dce0e6" stroke-width="2"/>
+<polyline points="413,235 413,315" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="405,306 413,315 421,306" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="413,414 413,460 272,460 272,500" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="264,491 272,500 280,491" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="375,546 460,546" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="451,538 460,546 451,554" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="524,596 524,680 413,680 413,758" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="405,749 413,758 421,749" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="272,596 272,995" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="264,986 272,995 280,986" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="413,850 413,995" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="405,986 413,995 421,986" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="413,1090 413,1175" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="405,1166 413,1175 421,1166" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="310,190 92,190 92,1042 235,1042" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="226,1034 235,1042 226,1050" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="310,368 144,368 144,1042 235,1042" fill="none" stroke="#b7bec8" stroke-width="2"/><polyline points="226,1034 235,1042 226,1050" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="516,368 585,368" fill="none" stroke="#b7bec8" stroke-width="2" stroke-dasharray="8 6"/><polyline points="576,360 585,368 576,376" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="668,546 690,546 690,622" fill="none" stroke="#b7bec8" stroke-width="2" stroke-dasharray="8 6"/><polyline points="682,613 690,622 698,613" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="585,668 413,668 413,758" fill="none" stroke="#b7bec8" stroke-width="2" stroke-dasharray="8 6"/><polyline points="405,749 413,758 421,749" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="516,804 690,804 690,858" fill="none" stroke="#b7bec8" stroke-width="2" stroke-dasharray="8 6"/><polyline points="682,849 690,858 698,849" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<polyline points="690,954 690,1042 590,1042" fill="none" stroke="#b7bec8" stroke-width="2" stroke-dasharray="8 6"/><polyline points="599,1034 590,1042 599,1050" fill="none" stroke="#b7bec8" stroke-width="2"/>
+<rect x="316" y="147" width="194" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="332.5" y="194" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">位点与回收记录</text>
+<rect x="316" y="325" width="194" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="344.0" y="372" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">影像文件管理</text>
+<rect x="592" y="325" width="194" height="84" rx="12" fill="#f4f4f4" stroke="#6c7480" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="631.5" y="360" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">素材库管理</text>
+<text x="643.0" y="391" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">（待定）</text>
+<rect x="176" y="502" width="193" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="203.5" y="549" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">物种标签导入</text>
+<rect x="469" y="502" width="193" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="496.5" y="549" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">个体标签导入</text>
+<rect x="592" y="631" width="194" height="84" rx="12" fill="#fff3d0" stroke="#d5aa3e" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="620.0" y="666" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">个体标注工具</text>
+<text x="643.0" y="697" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">（二期）</text>
+<rect x="316" y="758" width="194" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="344.0" y="805" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">个体档案管理</text>
+<rect x="592" y="865" width="194" height="84" rx="12" fill="#dff4e5" stroke="#49a55f" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="643.0" y="900" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">繁殖记录</text>
+<text x="643.0" y="931" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">（二期）</text>
+<rect x="244" y="1000" width="338" height="84" rx="12" fill="#f0f4fc" stroke="#4275ef" stroke-width="2"/>
+<text x="332.5" y="1047" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">数据查询与统计</text>
+<rect x="244" y="1180" width="338" height="84" rx="12" fill="#dff4e5" stroke="#49a55f" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="321.0" y="1215" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">可视化与报告导出</text>
+<text x="367.0" y="1246" font-family="Noto Sans CJK SC, sans-serif" font-size="23" font-weight="400" fill="#242830">（二期）</text>
+<text x="886.0" y="119" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">1.</text>
+<text x="932.0" y="119" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">位点与回收记录【一期】</text>
+<text x="932.0" y="166" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">录入位点基本信息，记录每期回收数据情况，支持分区域管理；</text>
+<text x="886.0" y="228" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">2.</text>
+<text x="932.0" y="228" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">影像文件管理【一期】</text>
+<text x="932.0" y="275" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">对 NAS 等存储的影像文件做统一管理，关联位点、时间、物</text>
+<text x="932.0" y="318" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">种、个体等数据。</text>
+<text x="886.0" y="380" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">3.</text>
+<text x="932.0" y="380" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">素材库管理【待定】</text>
+<text x="932.0" y="427" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">分类管理素材图片及视频，关联相关的物种、个体数据。</text>
+<text x="886.0" y="489" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">4.</text>
+<text x="932.0" y="489" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">物种识别【一期只做导入】</text>
+<text x="932.0" y="536" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">前期支持导入标签，后期可扩展 AI 识别＋人工复核的功能；</text>
+<text x="886.0" y="598" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">5.</text>
+<text x="932.0" y="598" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">个体识别【一期只做导入】</text>
+<text x="932.0" y="645" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">一期支持导入标签；【二期】开发人工标注功能（个体识别的</text>
+<text x="932.0" y="688" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">工具化程度低，所以优先于物种识别进行开发）；</text>
+<text x="886.0" y="750" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">6.</text>
+<text x="932.0" y="750" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">豹个体档案管理【一期】</text>
+<text x="932.0" y="797" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">包括编号、性别、出生年份、身份照、拍摄记录、亲缘关系等；</text>
+<text x="886.0" y="859" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">7.</text>
+<text x="932.0" y="859" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">豹繁殖记录【二期】</text>
+<text x="932.0" y="906" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">包含母豹和幼崽编号、出生日期与位点、幼崽存续情况等；</text>
+<text x="886.0" y="968" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">8.</text>
+<text x="932.0" y="968" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">数据查询与统计【一期】</text>
+<text x="932.0" y="1015" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">各区域的位点和回收情况、物种拍摄记录及 RAI、豹分布位点、</text>
+<text x="932.0" y="1058" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">豹个体出现记录；</text>
+<text x="886.0" y="1120" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="400" fill="#245cff">9.</text>
+<text x="932.0" y="1120" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#242830">可视化与报告导出【二期】</text>
+<text x="932.0" y="1167" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">查看豹个体家域及动态变化、物种分布动态等，按模板输出报</text>
+<text x="932.0" y="1210" font-family="Noto Sans CJK SC, sans-serif" font-size="28" font-weight="400" fill="#242830">告；</text>
+<text x="40.0" y="1369" font-family="Noto Sans CJK SC, sans-serif" font-size="19" font-weight="400" fill="#69717e">依据用户业务图重绘 · 2026-10-16 · 蓝色：一期；绿色/黄色：二期；灰色：待定</text>
+</svg>

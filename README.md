@@ -1,8 +1,10 @@
 # 红外相机数据管理平台 · WildlifeDATA
 
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
-需求基准为附件 V1.2；原始文档及提取文本保存在 [docs/source](docs/source)。
-模块 01 以已审阅的[详细需求 V1.1（含批量录入工作方式补充）](docs/requirements/01-camera-sites-and-retrieval.md)及同步的[数据库设计 V1.3](docs/design/wildlife_database_design_v1_3.md)为最新文档基线；[Word 版](docs/design/wildlife_database_design_v1_3.docx)同步提供。新版设计尚未迁移到运行数据库。
+最新总体需求为[需求 V1.3（含业务逻辑图与功能分期）](docs/requirements/platform-requirements-v1_3.md)，您原有的[总体需求 Word 链接](docs/source/camera_trap_data_management_requirements_v1_2.docx)已直接更新为 V1.3，另提供[按新版命名的同版副本](docs/requirements/platform-requirements-v1_3.docx)。
+模块 01 继续遵循已审阅的[详细需求 V1.1](docs/requirements/01-camera-sites-and-retrieval.md)。最新[数据库设计 V1.4](docs/design/wildlife_database_design_v1_4.md)及[Word 版](docs/design/wildlife_database_design_v1_4.docx)已同步本次分期；新版设计尚未迁移到运行数据库。原始附件及历史设计保留追溯。
+
+一期覆盖位点/回收、影像管理、物种与个体标签导入、豹个体档案（含亲缘关系）和查询统计（含 RAI）；二期为人工个体标注、繁殖记录、可视化与报告。素材库待定，物种 AI 识别为后续可扩展方向。
 
 当前可以完成：管理员登录 → 建立相机位点 → 记录工作与回收周期 → 建立物种和个体档案 → 查看监测概览。
 支持新增/列表 API、区域只读账号、精确坐标权限和新增操作审计。
@@ -98,3 +100,4 @@ python3 scripts/test-backend.py --env-file /workspace/.wildlife-data.env
 ## 模块 01 设计评审
 
 [低保真原型与使用说明](docs/prototypes/module01/README.md)提供可离线打开的单文件 HTML、九页 PDF 和页面截图。原型使用示例数据，不连接正式业务 API。
+
