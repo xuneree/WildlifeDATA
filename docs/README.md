@@ -12,7 +12,7 @@
 
 当前需求入口：[总体需求 V1.3](requirements/platform-requirements-v1_3.md) · [Word](requirements/platform-requirements-v1_3.docx) · [模块 01 详细需求](requirements/01-camera-sites-and-retrieval.md)。
 
-当前数据库入口：[数据库设计 V1.4](database/wildlife_database_design_v1_4.md) · [Word](database/wildlife_database_design_v1_4.docx)。V1.3 保留在 database 作为历史设计。
+当前数据库入口：[数据库设计 V1.5](database/wildlife_database_design_v1_5.md) · [Word](database/wildlife_database_design_v1_5.docx)。本次[设计指南](database/database_design_guide.md)优先于旧版冲突规则；V1.3/V1.4 保留为历史设计。
 
 根目录的 [implementation.md](implementation.md) 记录已经实现的能力、与需求的差距及开发顺序；[validation.md](validation.md) 记录检查与验收情况。这些状态记录与需求目标分开维护。
 

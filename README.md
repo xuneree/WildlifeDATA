@@ -3,9 +3,9 @@
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
 最新总体需求为[需求 V1.3（含业务逻辑图与功能分期）](docs/requirements/platform-requirements-v1_3.md)，提供[总体需求 Word V1.3](docs/requirements/platform-requirements-v1_3.docx)。
 `docs/source` 仅保留创建项目时提供的原始文档；后续需求修订放在 `docs/requirements`，数据库设计修订放在 `docs/database`，交互及界面设计稿放在 `docs/design`。
-模块 01 继续遵循已审阅的[详细需求 V1.1](docs/requirements/01-camera-sites-and-retrieval.md)。最新[数据库设计 V1.4](docs/database/wildlife_database_design_v1_4.md)及[Word 版](docs/database/wildlife_database_design_v1_4.docx)已同步本次分期；新版设计尚未迁移到运行数据库。原始附件及历史设计保留追溯。
+最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)及[Word 版](docs/database/wildlife_database_design_v1_5.docx)已按[新设计指南](docs/database/database_design_guide.md)修订：区域下项目与位点并列，增加机位及操作记录，拆分周期并统一校准，账号按区域/项目分别授权。与旧需求及[模块 01 详细需求](docs/requirements/01-camera-sites-and-retrieval.md)冲突的规则以本次指南和 V1.5 为准；新版尚未迁移到运行数据库，原始附件及历史设计保留追溯。
 
-一期覆盖位点/回收、影像管理、物种与个体标签导入、豹个体档案（含亲缘关系）和查询统计（含 RAI）；二期为人工个体标注、繁殖记录、可视化与报告。素材库待定，物种 AI 识别为后续可扩展方向。
+一期设计覆盖区域/项目、共享位点与机位、现场操作和布设周期、影像管理、物种与个体标签导入、豹/兔狲等个体档案及查询统计（含 RAI）；一期不纳入个体关系。二期沿用人工个体标注、繁殖记录、可视化与报告规划。素材标签底表保留，完整素材库待定，物种 AI 识别为后续可扩展方向。
 
 当前可以完成：管理员登录 → 建立相机位点 → 记录工作与回收周期 → 建立物种和个体档案 → 查看监测概览。
 支持新增/列表 API、区域只读账号、精确坐标权限和新增操作审计。
