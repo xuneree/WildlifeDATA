@@ -1,0 +1,10 @@
+底表：
+- station
+- camera
+- session
+- media
+- species
+- individual
+
+reference:
+https://cran.r-project.org/web/packages/camtrapR/index.html
