@@ -1,10 +1,14 @@
-底表：
-- station
-- camera
-- session
-- media
-- species
-- individual
+keyword：
+- region：区域，分为山西、西北、河北/北京三个区域
+- project：项目，从属于region，如和顺常规监测、和顺X337、阳曲常规监测
+- location：位点，从属于project
+- camera：相机，
+- deployment：布设，相机在特定时间和空间的一次布设
+- media：媒体，
+- event：独立事件
+- observation：
+- species：物种
+- individual：个体
 
 reference:
 https://cran.r-project.org/web/packages/camtrapR/index.html
