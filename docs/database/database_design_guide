@@ -1,14 +1,17 @@
 keyword：
-- region：区域，分为山西、西北、河北/北京三个区域
-- project：项目，从属于region，如和顺常规监测、和顺X337、阳曲常规监测
-- location：位点，从属于project
-- camera：相机，
+- region：区域，分为山西、西北、河北/北京三个区域（写死），各区域独立管理，由全局管理员授权区域管理员；
+- project：项目，从属于region，如和顺常规监测、和顺X337，由区域管理员授权项目工作人员；
+- location：位点，从属于project，记录经纬度和生境信息，有单侧/对拍类型，有启用/停用状态；
+- camera：相机，（相机是否需要库存管理？）
 - deployment：布设，相机在特定时间和空间的一次布设
 - media：媒体，
 - event：独立事件
 - observation：
 - species：物种
 - individual：个体
+
+
+
 
 reference:
 https://cran.r-project.org/web/packages/camtrapR/index.html
