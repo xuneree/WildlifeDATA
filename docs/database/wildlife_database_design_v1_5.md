@@ -1,6 +1,6 @@
 # 红外相机数据管理平台数据库设计文档
 
-V1.5 · 2026-11-05 · PostgreSQL + PostGIS
+V1.5 · 2026-11-06（维护与统计简化修订） · PostgreSQL + PostGIS
 
 依据《database_design_guide.md》修订的一期设计。本文完整描述本版模型，可独立用于评审及后续开发。设计文档更新不表示程序、数据库迁移或生产数据已经更新。
 
@@ -8,15 +8,15 @@ V1.5 · 2026-11-05 · PostgreSQL + PostGIS
 
 ### 1.1 依据及冲突处理
 
-本版直接依据用户提供的[数据库设计指南](https://github.com/xuneree/WildlifeDATA/blob/main/docs/database/database_design_guide.md)，以前版[数据库设计 V1.4](https://github.com/xuneree/WildlifeDATA/blob/main/docs/database/wildlife_database_design_v1_4.md)为修订基线，并参考[总体需求 V1.3](https://github.com/xuneree/WildlifeDATA/blob/main/docs/requirements/platform-requirements-v1_3.md)。读取的仓库快照为 `3bb1c71d5bd0cf7b09c23fc32a5631ae6d4f1abc`，指南文件 blob 为 `306672e3e06ea0f2709b90b2dc3760c0c467eaf3`。
+本版直接依据用户提供的[数据库设计指南](https://github.com/xuneree/WildlifeDATA/blob/docs/database-design-v1.5/docs/database/database_design_guide.md)，以前版[数据库设计 V1.4](https://github.com/xuneree/WildlifeDATA/blob/main/docs/database/wildlife_database_design_v1_4.md)为修订基线，并参考[总体需求 V1.3](https://github.com/xuneree/WildlifeDATA/blob/main/docs/requirements/platform-requirements-v1_3.md)。初稿读取仓库快照 `3bb1c71d5bd0cf7b09c23fc32a5631ae6d4f1abc`；本轮以 2026-11-06 用户补充说明为最新依据：维护统一命名、取消独立事件实体、固定选项直接约束字段。本分支的指南已同步维护术语和媒体标记、固定字段选项的设计说明。
 
-发生冲突时，以此次指南为准。因此，旧版“一级区域—二级区域—位点”改为“区域下分别管理项目与位点”；旧版一期亲缘关系取消；账号三角色改为账号类型与分范围权限。旧文档仅作历史参考，不能把两套规则同时用于新实现。
+发生冲突时，以本轮用户明确说明和修订后的指南为准。因此，旧版“一级区域—二级区域—位点”改为“区域下分别管理项目与位点”；旧版一期亲缘关系取消；账号三角色改为账号类型与分范围权限。旧文档仅作历史参考，不能把两套规则同时用于新实现。
 
 文中“指南要求”表示此次明确提出的业务原则；“本版实现建议”表示为完成可落地模型所采用的方案；“待明确”表示尚无业务结论。本版给出可继续设计的暂定方案，不把未决问题写成已确认需求。
 
 ### 1.2 一期与后续边界
 
-一期包括：区域和项目、共享位点、机位、操作记录、布设周期、媒体及派生文件、XMP 物种标签导入、Excel 个体标签导入、个体档案与多角度代表图、历史编号、媒体标签底表、账号授权、审计和查询统计支撑。标签底表不等于完整素材库的选编、裁剪、发布功能已经纳入一期。
+一期包括：区域和项目、共享位点、机位、维护记录、布设周期、媒体及派生文件、XMP 物种标签导入、Excel 个体标签导入、个体档案与多角度代表图、历史编号、媒体标签底表、账号授权、审计和查询统计支撑。标签底表不等于完整素材库的选编、裁剪、发布功能已经纳入一期。
 
 一期不增加实体相机库存管理，不增加个体关系表。已有个体关系数据须归档保留。人工个体标注工具、繁殖记录、家域可视化和模板报告沿用后续规划；物种 AI 的交付阶段仍另定。RAI 仍保留一期设计支撑，但正式计算口径须先确定。
 
@@ -26,7 +26,7 @@ V1.5 · 2026-11-05 · PostgreSQL + PostGIS
 | --- | --- | --- |
 | 数据组织 | 两级区域、位点 | 固定区域；区域下项目与位点并列，通过 project_location 多对多关联 |
 | 相机含义 | 周期内 device_code 字符串 | camera 独立表示位点内机位，非实体设备 |
-| 现场记录 | 工作、维护、回收混在周期内 | camera_visit 保存现场操作，camera_deployment 保存操作之间的周期 |
+| 现场记录 | 工作、现场维护及数据交接混在周期内 | camera_maintenance 保存现场维护，camera_deployment 保存维护之间的周期 |
 | 周期状态 | 主要为已结束周期 | 支持开放周期、已闭合周期及未补齐边界的历史周期 |
 | 时间校准 | 媒体单独校准 | 周期统一秒偏移；历史媒体单独校准保留为优先覆盖值 |
 | 当前标签 | species_annotation、individual_occurrence | media_species、media_individual，保留导入来源及覆盖历史 |
@@ -34,6 +34,12 @@ V1.5 · 2026-11-05 · PostgreSQL + PostGIS
 | 个体关系 | 一期 | 一期不纳入，历史数据归档 |
 | 账号权限 | admin/operator/viewer 与区域范围 | admin/normal 账号类型；区域、项目分别授权，取较高有效权限 |
 | 素材标签 | 主要支撑未知个体标签 | 保留系统标签并补齐素材标签、标记人和素材描述字段 |
+| 独立拍摄 | 派生事件及成员表 | 不建事件实体，在 media 和 media_species 保存有明确口径的标记 |
+| 固定选项 | 各自独立字典表 | location 的字段 + 数据库 CHECK + 统一选项配置 |
+
+### 1.4 本轮术语约定
+
+维护采用标准英文拼写 maintenance，统一使用 camera_maintenance。维护类型为安装 install、回收 collect、停用 deactivate；“回收”仅是维护类型，不再是与维护并列的业务实体。周期边界及媒体来源均引用维护记录。旧版术语仅允许出现在迁移对照中。
 
 ## 2. 业务对象与关系
 
@@ -45,11 +51,9 @@ V1.5 · 2026-11-05 · PostgreSQL + PostGIS
 | project | 有明确目标的监测项目，只属于一个 region | 和顺常规监测、和顺 X337 |
 | location | 地理监测位置，只属于一个 region；可关联零个或多个同区域 project | 701 |
 | camera | location 内稳定机位；更换实体相机不更换机位 ID | 701A、701B |
-| camera_visit | 对一个 camera 的一次现场操作 | 安装、回收、停用 |
-| retrieval | 一次数据回收事实，在 camera_visit 中表达，不另建重复事实表 | 701A 在 2026-10-01 回收 |
-| camera_deployment | 同一 camera 两个边界操作之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
+| camera_maintenance | 对一个 camera 的一次现场维护 | 安装、回收、停用 |
+| camera_deployment | 同一 camera 两个边界维护之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
 | media | 一个原始视频或图片，只属于一个 deployment | IMG00001.MP4 |
-| event | 按明确规则由连续媒体生成的独立事件，只属于一个 deployment | 某周期内某物种的一次独立拍摄 |
 | annotation | 媒体与物种或个体的当前有效关联 | media_species、media_individual |
 | species | 全系统物种字典 | leopard |
 | individual | 稳定身份的个体档案，可改当前编号 | LEO_HS1905F |
@@ -58,7 +62,7 @@ V1.5 · 2026-11-05 · PostgreSQL + PostGIS
 
 ### 2.2 核心实体关系图
 
-下图省略字典、导入历史、审计及代表图等支撑表；箭头代表外键关系，不代表数据必须按箭头顺序录入。
+下图省略导入历史、素材标签、审计及代表图等支撑表；箭头代表外键关系，不代表数据必须按箭头顺序录入。
 
 ```mermaid
 erDiagram
@@ -67,9 +71,9 @@ erDiagram
     project ||--o{ project_location : links
     location ||--o{ project_location : participates
     location ||--o{ camera : contains
-    camera ||--o{ camera_visit : records
+    camera ||--o{ camera_maintenance : records
     camera ||--o{ camera_deployment : has
-    camera_visit o|--o{ camera_deployment : boundary
+    camera_maintenance o|--o{ camera_deployment : boundary
     camera_deployment ||--o{ media : contains
     media ||--o{ media_derivative : derives
     media ||--o{ media_species : annotated
@@ -77,15 +81,12 @@ erDiagram
     media ||--o{ media_individual : annotated
     individual ||--o{ media_individual : appears
     species ||--o{ individual : classifies
-    camera_deployment ||--o{ event : groups
-    event ||--|{ event_media : contains
-    media ||--o{ event_media : belongs
     app_user ||--o{ user_permission : grants
     region o|--o{ user_permission : scope
     project o|--o{ user_permission : scope
 ```
 
-camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end_visit_id。同一次回收可同时是上一周期结束与下一周期开始；新周期并不复制该操作记录。user_permission 每行只选择 region 或 project 其中一个范围。
+camera_maintenance 作为周期边界具有两种具体外键：start_maintenance_id 和 end_maintenance_id。同一次回收可同时是上一周期结束与下一周期开始；新周期并不复制该维护记录。user_permission 每行只选择 region 或 project 其中一个范围。
 
 ### 2.3 项目归属的本版实现建议
 
@@ -99,9 +100,9 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 
 表名用单数 snake_case。主键采用 UUID，不随业务编号变化。代码字段保持文本，保留前导零。相机机位统一使用 camera_code，实体设备型号使用 camera_model；不把型号当机位编号。
 
-`DATE` 保存现场操作、布设和有效工作日期，不伪造午夜；`TIMESTAMPTZ` 保存媒体拍摄与审计时间点。媒体来源时区通过来源记录明确，未知时区不按服务器默认值猜测。界面按明确选择的时区展示。
+`DATE` 保存现场维护、布设和有效工作日期，不伪造午夜；`TIMESTAMPTZ` 保存媒体拍摄与审计时间点。媒体来源时区通过来源记录明确，未知时区不按服务器默认值猜测。界面按明确选择的时区展示。
 
-除复合关联表和固定选项表外，业务表默认有 `id UUID PRIMARY KEY`、`created_at TIMESTAMPTZ NOT NULL DEFAULT now()`、`updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`；下方不重复列出。可变事实表另有 `row_version BIGINT NOT NULL DEFAULT 1`，用于导入预览后提交及人工更正的并发检查。导入历史、审计和已完成统计快照只追加，不原位修改内容。表中“必填”含数据库 NOT NULL；“可空”表示 NULL，不用空字符串、0 或虚构关联替代未知值。
+除复合关联表外，业务表默认有 `id UUID PRIMARY KEY`、`created_at TIMESTAMPTZ NOT NULL DEFAULT now()`、`updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`；下方不重复列出。可变事实表另有 `row_version BIGINT NOT NULL DEFAULT 1`，用于导入预览后提交及人工更正的并发检查。导入历史、审计和已完成统计快照只追加，不原位修改内容。表中“必填”含数据库 NOT NULL；“可空”表示 NULL，不用空字符串、0 或虚构关联替代未知值。
 
 指南以 * 标明非必填。本版字段表进一步区分正常必填、条件必填和历史/未知可空：开放周期不要求结束信息，未复核不要求复核人，未知出生信息、坐标和工作量允许 NULL。这些可空处理沿用真实资料不完整时不造值的原则，属于实现建议；新在线录入是否强制坐标、生境等资料齐全，应在表单验收时确认，不能以虚构值满足约束。
 
@@ -109,7 +110,7 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 
 ## 4. 表清单
 
-本版一期模型共 30 张表，含固定选项、导入和统计支撑；统计三表为建议派生结构。可选的位点历史编号及多段工作区间不计入本版 30 张表。表数不是运行库已实现表数。
+本版一期模型含 24 张基础及支撑表、1 张可选 statistics_run 统计快照表，共 25 张表。取消事件两表和固定选项三表；可选的位点历史编号及多段工作区间不计入本版 25 张表。表数不是运行库已实现表数。
 
 | 分组 | 表 | 职责 |
 | --- | --- | --- |
@@ -118,7 +119,7 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 | 组织 | project_location | 项目—位点关联 |
 | 监测 | location | 地理位点 |
 | 监测 | camera | 位点内机位 |
-| 监测 | camera_visit | 安装、回收、停用操作 |
+| 监测 | camera_maintenance | 安装、回收、停用维护 |
 | 监测 | camera_deployment | 布设周期及周期统一校准 |
 | 媒体 | media | 原始文件索引 |
 | 媒体 | media_derivative | 代理视频、缩略图、抽帧 |
@@ -137,12 +138,7 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 | 账号 | app_user | 账号类型、身份及状态 |
 | 账号 | user_permission | 区域或项目授权 |
 | 审计 | audit_log | 操作和前后快照 |
-| 固定选项 | terrain_option | 地形 |
-| 固定选项 | habitat_option | 生境类型，承接原植被词表的映射候选 |
-| 固定选项 | environment_option | 保留旧环境属性，避免无依据丢字段 |
 | 统计 | statistics_run | 规则、输入、结果快照 |
-| 统计 | event | 按周期派生的物种独立事件 |
-| 统计 | event_media | 事件—媒体成员 |
 
 ## 5. 组织与监测数据字典
 
@@ -183,9 +179,9 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 | longitude | DOUBLE PRECISION | 可空 | -180 至 180 |
 | latitude | DOUBLE PRECISION | 可空 | -90 至 90，与经度同时填写或同时为空 |
 | elevation_m | NUMERIC(8,2) | 可空 | 海拔米，可为合法负值 |
-| habitat_type | VARCHAR(20) | 可空 | FK → habitat_option.option_code |
-| terrain_type | VARCHAR(20) | 可空 | FK → terrain_option.option_code |
-| environment_type | VARCHAR(20) | 可空 | FK → environment_option.option_code；兼容旧字段 |
+| habitat_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束 |
+| terrain_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束 |
+| environment_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束；兼容旧字段 |
 | first_deployed_date | DATE | 可空 | 首次布设日期；已有可靠历史保留 |
 | track_storage_path | TEXT | 可空 | 轨迹文件受控存储键，不内嵌文件内容 |
 | notes | TEXT | 可空 | 说明 |
@@ -217,43 +213,43 @@ camera_visit 作为周期边界具有两种具体外键：start_visit_id 和 end
 | camera_status | VARCHAR(20) | 必填 / active | active / inactive，机位是否启用 |
 | notes | TEXT | 可空 | 机位说明 |
 
-约束：UNIQUE(location_id,camera_code)。机位非设备，无库存数量、采购、资产流转字段。型号记录在操作和周期；同机位换新实体相机沿用 camera.id。机位挪到新的地理位点须新建 ID，历史媒体不改挂。若未来加入实体资产模块，另建 camera_device 并关联周期，不改变 camera 的含义。
+约束：UNIQUE(location_id,camera_code)。机位非设备，无库存数量、采购、资产流转字段。型号记录在维护和周期；同机位换新实体相机沿用 camera.id。机位挪到新的地理位点须新建 ID，历史媒体不改挂。若未来加入实体资产模块，另建 camera_device 并关联周期，不改变 camera 的含义。
 
-### 5.6 camera_visit｜相机操作记录
+### 5.6 camera_maintenance｜相机维护记录
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | camera_id | UUID | 必填 | FK → camera.id；位点经 camera 推导 |
-| operation_date | DATE | 必填 | 现场操作日期 |
-| operation_sequence | INTEGER | 必填 / 1 | 同机位同日操作顺序，正整数 |
-| operation_type | VARCHAR(20) | 必填 | install / retrieval / deactivate |
-| data_retrieval_batch | VARCHAR(20) | 条件可空 | 本次回收批次；安装无回收时为空 |
-| data_retrieval_status | VARCHAR(20) | 条件可空 | retrieved / not_retrieved；未发生回收动作时为空 |
-| camera_model_after | VARCHAR(20) | 可空 | 操作后留在机位的相机型号；撤机可空 |
+| maintenance_date | DATE | 必填 | 现场维护日期 |
+| maintenance_sequence | INTEGER | 必填 / 1 | 同机位同日维护顺序，正整数 |
+| maintenance_type | VARCHAR(20) | 必填 | install / collect / deactivate |
+| maintenance_batch | VARCHAR(20) | 条件可空 | 本次维护批次；回收类型及有数据交接结果时必填，其他类型可选 |
+| data_status | VARCHAR(20) | 条件可空 | collected / not_collected；无数据交接动作时为空 |
+| camera_model_after | VARCHAR(20) | 可空 | 维护后留在机位的相机型号；撤机可空 |
 | working_status_after | VARCHAR(20) | 必填 / unknown | normal / faulty / stopped / unknown |
-| is_deployed_after | BOOLEAN | 必填 | 操作后机位是否仍布有相机，不设猜测默认值 |
-| operated_by | TEXT | 可空 | 现场工作人员姓名 |
+| is_deployed_after | BOOLEAN | 必填 | 维护后机位是否仍布有相机，不设猜测默认值 |
+| maintained_by | TEXT | 可空 | 现场工作人员姓名 |
 | recorded_by_id | UUID | 必填 | FK → app_user.id；录入账号，区别于现场人员 |
 | issue_type | VARCHAR(50) | 可空 | 异常类型；正常为空 |
 | issue_notes | TEXT | 可空 | 异常问题 |
 | maintenance_notes | TEXT | 可空 | 维护内容 |
 | notes | TEXT | 可空 | 其他说明 |
 
-约束：UNIQUE(camera_id,operation_date,operation_sequence)，另设 UNIQUE(camera_id,id) 供周期复合外键。install 要求 is_deployed_after=true，deactivate 要求 false；retrieval 必须填写回收状态和批次，retrieved 必须有批次。deactivate 可同时记录回收；install 本版不同时表达回收，应先记录回收再安装。回收批次是分组代码，不是唯一回收操作 ID，同机位同批次多次回收通过不同 visit.id 区分。
+约束：UNIQUE(camera_id,maintenance_date,maintenance_sequence)，另设 UNIQUE(camera_id,id) 供周期复合外键。install 要求 is_deployed_after=true，deactivate 要求 false；collect 必须填写data_status 和维护批次，collected 必须有批次。deactivate 可同时记录回收；install 本版不同时表达回收，应先记录回收再安装。维护批次是分组代码，不是独立业务对象或唯一维护 ID，同机位同批次多次回收通过不同 maintenance.id 区分。
 
-retrieved 表示确实取回数据介质/数据，空卡或损坏仍为 retrieved，异常写说明。not_retrieved 表示回收尝试失败或未取回；不能据此假造已完成回收。问题类型沿用既有候选 sd_card_lost / camera_lost / camera_damaged / battery_depleted / other，词表最终以业务配置为准。
+collected 表示确实取回数据介质/数据，空卡或损坏仍为 collected，异常写说明。not_collected 表示回收尝试失败或未取回；不能据此假造已完成回收。问题类型沿用既有候选 sd_card_lost / camera_lost / camera_damaged / battery_depleted / other，词表最终以业务配置为准。
 
-指南列出的位点编号和相机编号在视图中通过 camera.location_id 输出，不在本表重复保存易冲突的编号。批次只保存于操作表，媒体通过所属回收操作获得批次。
+指南列出的位点编号和相机编号在视图中通过 camera.location_id 输出，不在本表重复保存易冲突的编号。批次只保存于维护表，媒体通过所属回收维护获得批次。
 
 ### 5.7 camera_deployment｜布设周期
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | camera_id | UUID | 必填 | FK → camera.id |
-| start_visit_id | UUID | 条件可空 | 起始操作；新建正常周期必填 |
-| end_visit_id | UUID | 条件可空 | 结束操作；开放周期为空 |
+| start_maintenance_id | UUID | 条件可空 | 起始维护；新建正常周期必填 |
+| end_maintenance_id | UUID | 条件可空 | 结束维护；开放周期为空 |
 | deployment_status | VARCHAR(20) | 必填 | open / closed / legacy_unknown |
-| camera_model | VARCHAR(20) | 可空 | 周期内型号快照，来自起始操作后的型号 |
+| camera_model | VARCHAR(20) | 可空 | 周期内型号快照，来自起始维护后的型号 |
 | deployment_start_date | DATE | 条件可空 | 布设开始日期，新周期必填 |
 | deployment_end_date | DATE | 条件可空 | 布设结束日期，closed 必填 |
 | effective_work_start_date | DATE | 可空 | 有依据的有效工作起始日期 |
@@ -263,21 +259,28 @@ retrieved 表示确实取回数据介质/数据，空卡或损坏仍为 retrieve
 | time_offset_note | TEXT | 可空 | 校准依据与说明 |
 | time_offset_updated_by_id | UUID | 可空 | FK → app_user.id |
 | time_offset_updated_at | TIMESTAMPTZ | 可空 | 最后一次校准时间 |
+| independence_status | VARCHAR(20) | 必填 / pending | pending / ready / stale，当前周期独立拍摄标记是否可用 |
+| independence_rule_version | VARCHAR(100) | 可空 | 用于派生标记的默认规则版本，ready 时必填 |
+| independence_input_signature | VARCHAR(64) | 可空 | 媒体、时间和物种输入签名，ready 时必填 |
 | notes | TEXT | 可空 | 周期说明 |
 
-外键：用 (camera_id,start_visit_id) 与 (camera_id,end_visit_id) → camera_visit(camera_id,id) 保证同机位。start_visit_id 非空唯一，end_visit_id 非空唯一，允许同一个 visit.id 出现在上一周期 end 与下一周期 start。创建部分唯一索引 UNIQUE(camera_id) WHERE deployment_status='open'。
+外键：用 (camera_id,start_maintenance_id) 与 (camera_id,end_maintenance_id) → camera_maintenance(camera_id,id) 保证同机位。start_maintenance_id 非空唯一，end_maintenance_id 非空唯一，允许同一个 maintenance.id 出现在上一周期 end 与下一周期 start。创建部分唯一索引 UNIQUE(camera_id) WHERE deployment_status='open'。
 
-状态约束：open 要求 start_visit_id 和开始日期非空，end_visit_id 和结束日期为空；closed 要求两端操作及日期非空；legacy_unknown 只用于不能可靠重建边界的历史记录，新在线录入禁止使用。日期均在已知时检查先后，有效工作区间不得超出已知布设边界；verified=true 要求有效起止均非空且确认为连续工作。校准偏移非空时，校准人、时间必填。
+状态约束：open 要求 start_maintenance_id 和开始日期非空，end_maintenance_id 和结束日期为空；closed 要求两端维护及日期非空；legacy_unknown 只用于不能可靠重建边界的历史记录，新在线录入禁止使用。日期均在已知时检查先后，有效工作区间不得超出已知布设边界；verified=true 要求有效起止均非空且确认为连续工作。校准偏移非空时，校准人、时间必填。independence_status=ready 时规则版本和输入签名必填，状态约束由 CHECK 落实。
 
-开始、结束日期是边界操作日期的受控冗余，用约束触发器或同一事务服务核对，不能允许独立随意编辑。边界先后按“操作日期、同日顺序”比较；同一天允许上一周期结束和下一周期开始，因此不能用日期相等直接判为重叠。
+开始、结束日期是边界维护日期的受控冗余，用约束触发器或同一事务服务核对，不能允许独立随意编辑。边界先后按“维护日期、同日顺序”比较；同一天允许上一周期结束和下一周期开始，因此不能用日期相等直接判为重叠。
 
-媒体只保存 deployment_id。结束操作与回收操作通常相同，但停用后另行取卡时可能不同，故媒体另有 retrieval_visit_id；二者不能混为一个概念。
+媒体归属布设周期使用 deployment_id。结束维护与回收维护通常相同，但停用后另行取卡时可能不同，故媒体另有 maintenance_id；二者不能混为一个概念。
 
-### 5.8 固定选项表
+### 5.8 生境、地形等固定选项直接约束字段
 
-terrain_option、habitat_option、environment_option 使用相同结构：`option_code VARCHAR(20) PRIMARY KEY`、`option_name VARCHAR(100) NOT NULL`、`is_active BOOLEAN NOT NULL DEFAULT true`、`notes TEXT NULL`。三表不使用通用 UUID 与时间字段。
+一期不建 terrain_option、habitat_option、environment_option 表。location 直接保存 habitat_type、terrain_type、environment_type 的稳定字符串代码；数据库按各字段允许值建立 CHECK 约束，前端下拉框和 Excel 校验从同一份版本化选项配置生成。数据库不保存“下拉框”，而是校验最终写入值。
 
-选项由明确词表配置，录入和 Excel 使用同一词表，未知值报错，不自动新建。原 vegetation_option 与新“生境类型”的语义是否相同需人工映射，不直接改表名后把全部历史值当作生境。原环境属性保留为兼容可选项；后续若确认删除须先归档。
+采用 VARCHAR + CHECK 而非 PostgreSQL 原生 ENUM，便于后续经迁移修改选项。具体允许值尚未提供，本文件不编造词表或把示例当正式取值；实施时必须将已确认代码列表落实到 CHECK，不能只在前端限制。未知值报错；空值仍按字段的可空规则处理。
+
+固定且少量、随版本发布的选项不需要字典表。只有后续需要管理员在线增删、停用旧选项、排序或多语言等能力时，再考虑字典表；即使届时引入，也可使用一张带类别的统一字典，不必每个字段一张表。
+
+选项展示名修改不改变稳定代码。删除或改义旧代码前先检查历史值，不能在收紧 CHECK 前静默丢数据。原 vegetation_type 与新“生境类型”的语义须人工映射，原 environment_type 兼容保留；未核对的值归档待处理。
 
 ## 6. 媒体、物种与标签数据字典
 
@@ -286,7 +289,7 @@ terrain_option、habitat_option、environment_option 使用相同结构：`optio
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | deployment_id | UUID | 必填 | FK → camera_deployment.id |
-| retrieval_visit_id | UUID | 可空 | FK → camera_visit.id；实际取得本文件的回收操作，历史不明可空 |
+| maintenance_id | UUID | 可空 | FK → camera_maintenance.id；实际取得本文件的回收维护，历史不明可空 |
 | filename | TEXT | 必填 | 原始文件名 |
 | media_type | VARCHAR(10) | 必填 | video / image |
 | storage_path | TEXT | 必填 | 受控 NAS 路径或存储键，唯一 |
@@ -302,11 +305,12 @@ terrain_option、habitat_option、environment_option 使用相同结构：`optio
 | height | INTEGER | 可空 | 像素高，非空须大于 0 |
 | codec | VARCHAR(50) | 可空 | 编码 |
 | individual_annotation_status | VARCHAR(20) | 必填 / unannotated | unannotated / annotated |
+| is_independent_capture | BOOLEAN | 可空 / NULL | 文件级独立拍摄标记；TRUE=代表文件，FALSE=同组后续文件，NULL=未判定 |
 | notes | TEXT | 可空 | 文件说明 |
 
-retrieval_visit_id 非空时必须为同机位且状态 retrieved 的操作；回收操作日期不早于文件所属已知周期的结束边界。停用关闭后才取卡，允许引用后来的成功回收操作。同一个回收可取回多个历史周期的文件，但每个媒体仍须明确一个拍摄周期。不能只按文件名或批次猜归属。
+maintenance_id 非空时必须为同机位且 data_status=collected 的维护；回收维护日期不早于文件所属已知周期的结束边界。停用关闭后才取卡，允许引用后来的成功回收维护。同一次回收类型维护可取得多个历史周期的文件，但每个媒体仍须明确一个拍摄周期。不能只按文件名或批次猜归属。
 
-回收批次由 retrieval_visit_id → camera_visit.data_retrieval_batch 推导，视图输出该字段，不在 media 再独立存一份。原文件拍摄时间沿用首次读取文件 mtime 的已有约定，新导入优先规则变化须单独确认；captured_time_source 的 metadata 值仅为明确采用元数据时的扩展，不静默改变默认来源。未知时间不排除媒体入库，但不能参与依赖精确时间的事件统计。
+维护批次由 maintenance_id → camera_maintenance.maintenance_batch 推导，视图输出该字段，不在 media 再独立存一份。原文件拍摄时间沿用首次读取文件 mtime 的已有约定，新导入优先规则变化须单独确认；captured_time_source 的 metadata 值仅为明确采用元数据时的扩展，不静默改变默认来源。未知时间不排除媒体入库，但独立拍摄标记保留 NULL，不能把缺少时间视为“非独立”。
 
 有效拍摄时间为视图计算列 `effective_captured_at`，公式见第 11 节。不把跨表计算写成 PostgreSQL generated column，也不批量覆盖原始 captured_at。
 
@@ -384,6 +388,7 @@ success/skipped 必须有 media_id；每批非空 media_id 唯一。success 的 
 | annotation_import_item_id | UUID | 条件可空 | FK → annotation_import_item.id |
 | source_type | VARCHAR(20) | 必填 | xmp_import / legacy；manual 留待后续工具启用 |
 | imported_at | TIMESTAMPTZ | 可空 | 可靠导入时间 |
+| is_independent_capture | BOOLEAN | 可空 / NULL | 此物种在该媒体上的独立拍摄标记，用于物种次数和 RAI 分子 |
 
 UNIQUE(media_id,species_id)。导入批次 ID 通过 item 推导，不重复保存两个可能冲突的来源外键。source_type=xmp_import 必须引用同媒体的成功导入项；legacy 不伪造来源。一个媒体可多物种，本版不增加数量、框或帧时段。
 
@@ -601,11 +606,11 @@ P = 用户对 p.id 的项目权限，缺省 none
 | --- | --- | --- | --- | --- |
 | 查询范围内位点、媒体、标签和统计 | 允许 | 允许 | 关联位点范围内允许 | 授权范围内允许 |
 | 导入媒体、XMP、Excel 个体标签，编辑素材标签 | 允许 | 允许 | 关联位点范围内允许 | 不允许 |
-| 新建或维护位点、机位、现场操作和布设周期 | 允许 | 允许 | 不允许，提交区域工作人员维护 | 不允许 |
+| 新建或维护位点、机位、现场维护和布设周期 | 允许 | 允许 | 不允许，提交区域工作人员维护 | 不允许 |
 | 周期统一时间校准 | 允许 | 允许 | 不允许，影响共享周期 | 不允许 |
 | 更改项目—位点关联、创建/停用项目 | 允许 | 不允许 | 不允许 | 不允许 |
 | 删除未引用的误建位点 | 允许 | 区域范围内允许 | 不允许 | 不允许 |
-| 删除未引用的误建周期或现场操作 | 允许 | 不允许 | 不允许 | 不允许 |
+| 删除未引用的误建周期或现场维护 | 允许 | 不允许 | 不允许 | 不允许 |
 | 授予区域管理权限 | 仅全局管理员 | 不允许 | 不允许 | 不允许 |
 | 授予区域或项目的工作、只读、无 | 区域管理员在本区域内允许 | 不允许 | 不允许 | 不允许 |
 | 维护物种、系统标签及固定区域 | 仅全局管理员 | 不允许 | 不允许 | 不允许 |
@@ -632,39 +637,39 @@ P = 用户对 p.id 的项目权限，缺省 none
 
 档案新建、改号、出生及存活状态、代表图管理由 management_region_id 对应的区域工作/管理账号或全局管理员负责；仅项目工作可将有权使用的已有个体关联媒体，不能全局改号。管理责任区域不明的历史档案暂由全局管理员维护。选择另一地区已建档身份时，由区域管理员协作确认，不因模糊编号静默创建重复档案或泄露隐藏档案信息。
 
-## 10. 操作记录与布设周期的事务规则
+## 10. 维护记录与布设周期的事务规则
 
 ### 10.1 周期边界
 
-正常周期从安装开始，到成功回收或停用结束。中途成功回收后继续布设时，该回收操作结束上一周期并开启下一周期。仅回收尝试但未取回数据且继续布设，不切断周期；若随后停用，则以停用结束。该规则是对指南“两次回收期间”的实现细化，避免把未成功回收当成数据已交接。
+正常周期从安装开始，到成功回收或停用结束。中途成功回收后继续布设时，该回收维护结束上一周期并开启下一周期。仅回收尝试但未取回数据且继续布设，不切断周期；若随后停用，则以停用结束。该规则是对指南“两次回收期间”的实现细化，避免把未成功回收当成数据已交接。
 
-| 操作及结果 | 上一开放周期 | 新周期 | 说明 |
+| 维护类型及结果 | 上一开放周期 | 新周期 | 说明 |
 | --- | --- | --- | --- |
-| install，操作后已布设 | 必须不存在，否则报冲突 | 开启 | 起点是安装操作 |
-| retrieval，retrieved，继续布设 | 结束 | 开启 | 同 visit 同时作为前后边界 |
-| retrieval，retrieved，撤机 | 结束 | 不开启 | 操作后 is_deployed_after=false |
-| retrieval，not_retrieved，继续布设 | 保持 | 不开启 | 失败尝试仍有现场记录 |
-| retrieval，not_retrieved，结束布设 | 结束 | 不开启 | 记录为何结束且未取回 |
+| install，维护后已布设 | 必须不存在，否则报冲突 | 开启 | 起点是安装维护 |
+| collect，collected，继续布设 | 结束 | 开启 | 同 maintenance 同时作为前后边界 |
+| collect，collected，撤机 | 结束 | 不开启 | 维护后 is_deployed_after=false |
+| collect，not_collected，继续布设 | 保持 | 不开启 | 失败尝试仍有现场记录 |
+| collect，not_collected，结束布设 | 结束 | 不开启 | 记录为何结束且未取回 |
 | deactivate | 若存在则结束 | 不开启 | 可同时记录成功或失败回收 |
-| 已停用后补做成功取卡 | 无需伪造开放周期 | 不开启 | 可供历史媒体引用实际 retrieval_visit_id |
+| 已停用后补做成功取卡 | 无需伪造开放周期 | 不开启 | 可供历史媒体引用实际 maintenance_id |
 
-同一机位最多一个 open 周期。操作后的相机型号用于新周期；上一周期保留其起始型号快照。正常周期中更换实体相机或改变校准基准，应以真实操作形成可追溯边界，不能用事后型号覆盖历史。若不是回收动作而是单纯维修，不能伪造 retrieval，见第 14 节待明确项。
+同一机位最多一个 open 周期。维护后的相机型号用于新周期；上一周期保留其起始型号快照。正常周期中更换实体相机或改变校准基准，应以真实维护形成可追溯边界，不能用事后型号覆盖历史。若不是回收动作而是单纯维修，不能伪造 collect，见第 16 节待明确项。
 
 ### 10.2 日期示例
 
-机位 701A：2026-08-01 安装 V1 → 2026-09-30 成功回收 V2 并继续布设 → 2026-10-31 停用 V3。
+机位 701A：2026-08-01 安装 M1 → 2026-09-30 成功回收 M2 并继续布设 → 2026-10-31 停用 M3。
 
-形成 D1(start=V1,end=V2)、D2(start=V2,end=V3)。V2 的 camera_model_after 若变更为另一型号，只影响 D2。D1 的有效工作结束日期可以是 2026-09-27，不自动等于 9 月 30 日。2026-09-30 的媒体需要目录和回收上下文确认属于 D1 或 D2，不能凭 DATE 自动假定操作发生在零点。
+形成 D1(start=M1,end=M2)、D2(start=M2,end=M3)。M2 的 camera_model_after 若变更为另一型号，只影响 D2。D1 的有效工作结束日期可以是 2026-09-27，不自动等于 9 月 30 日。2026-09-30 的媒体需要目录和回收上下文确认属于 D1 或 D2，不能凭 DATE 自动假定操作发生在零点。
 
-同日多操作通过 operation_sequence 明确先后；不能用虚构时间点解决未知时刻。安装、结束日期只是边界日期，统计工作量仍需单独确认日界和纳入方式。
+同日多次维护通过 maintenance_sequence 明确先后；不能用虚构时间点解决未知时刻。安装、结束日期只是边界日期，统计工作量仍需单独确认日界和纳入方式。
 
 ### 10.3 写入与更正
 
-创建操作时锁定 camera 及当前开放周期，在同一事务内写 camera_visit、闭合旧周期、开启新周期和 audit_log。通过机位锁与开放周期唯一索引防止并发产生两个 open。周期不得跨不同机位引用操作，不能重叠复用同一个起点或终点。
+创建维护时锁定 camera 及当前开放周期，在同一事务内写 camera_maintenance、闭合旧周期、开启新周期和 audit_log。通过机位锁与开放周期唯一索引防止并发产生两个 open。周期不得跨不同机位引用维护，不能重叠复用同一个起点或终点。
 
-事后补录早期操作时，重新校验该机位时间线并预览受影响周期；已有媒体时不自动改挂或按日期自动拆分。确认后在同一更正事务更新引用和审计，标记受影响统计过期。结束操作被周期引用时禁止直接删除。
+事后补录早期维护时，重新校验该机位时间线并预览受影响周期；已有媒体时不自动改挂或按日期自动拆分。确认后在同一更正事务更新引用和审计，标记受影响统计过期。结束维护被周期引用时禁止直接删除。
 
-停用 location 或 camera 不删除历史，也不伪造现场停用操作；若存在 open 周期，状态变更流程需明确是否补录真实停用操作或只是行政停用。允许历史补录，普通新建默认隐藏停用对象。
+停用 location 或 camera 不删除历史，也不伪造现场停用维护；若存在 open 周期，状态变更流程需明确是否补录真实停用维护或只是行政停用。允许历史补录，普通新建默认隐藏停用对象。
 
 ## 11. 时间校准与有效工作区间
 
@@ -685,7 +690,7 @@ END AS effective_captured_at
 
 更改偏移只更改周期字段并写审计，所有未单独覆盖的媒体立即生效。预览须显示媒体数、单独覆盖数、日期越界候选和受影响统计，不改原始文件及 captured_at。校准后时间超出已知周期的媒体须核查，不自动截断到边界。
 
-事件及 RAI 使用有效时间。校准后旧统计保留原快照并标为过期，新查询重算，不能让旧结果静默代表新时间。
+独立拍摄判定及 RAI 使用有效时间；校准变更使对应周期 independence_status=stale，须重算标记。校准后旧统计保留原快照并标为过期，新查询重算，不能让旧结果静默代表新时间。
 
 ### 11.2 有效工作日期
 
@@ -697,17 +702,17 @@ END AS effective_captured_at
 
 ## 12. 导入、更正与历史保留
 
-### 12.1 位点、机位与现场操作导入
+### 12.1 位点、机位与现场维护导入
 
 使用区域、项目、位点、机位的稳定代码与明确上下文匹配；项目关联另列处理，不在每次录入位点时覆盖项目列表。未知区域、项目和固定选项报错；可按明确流程先建项目或机位，不按模糊文本偷偷创建。
 
-操作导入按机位和操作顺序排序，在预校验中模拟周期衔接。同键同内容跳过，同键不同内容报冲突；普通批量导入不作为历史覆盖接口。一次成功提交的位点/操作、周期联动与审计须同事务。确认提交时重新核对当前权限、row_version、唯一性和开放周期，失败整批回滚。
+维护导入按机位和维护顺序排序，在预校验中模拟周期衔接。同键同内容跳过，同键不同内容报冲突；普通批量导入不作为历史覆盖接口。一次成功提交的位点/维护、周期联动与审计须同事务。确认提交时重新核对当前权限、row_version、唯一性和开放周期，失败整批回滚。
 
-新版不再以 (位点,机位,回收批次) 唯一约束代替操作 ID：同批次多次回收允许保存，但旧系统中存在的唯一约束需在数据迁移完成后明确移除。UI 若需防止误重复，可提示同机位同日同批次已有操作，不能阻止真实多次操作。
+新版不再以 (位点,机位,维护批次) 唯一约束代替维护 ID：同批次多次回收允许保存，但旧系统中存在的唯一约束需在数据迁移完成后明确移除。UI 若需防止误重复，可提示同机位同日同批次已有维护，不能阻止真实多次维护。
 
 ### 12.2 原始媒体入库
 
-先明确 deployment_id，再核对实际回收操作、目录、文件路径和可选哈希。文件名和回收批次均不足以唯一定位媒体。未知周期的文件先留在导入暂存区，不创建假周期后当作完整事实。历史周期边界不明可按 legacy_unknown 显式保留可靠归属。
+先明确 deployment_id，再核对实际回收维护、目录、文件路径和可选哈希。文件名和维护批次均不足以唯一定位媒体。未知周期的文件先留在导入暂存区，不创建假周期后当作完整事实。历史周期边界不明可按 legacy_unknown 显式保留可靠归属。
 
 同路径重复上传须幂等；不同路径相同哈希提示核查，不自动删除。首次拍摄时间及其来源冻结，后续 mtime 变化不静默覆盖。读取 NAS、媒体分析或代理生成失败要有可重试结果，数据库事务不能声称文件已可靠生成但存储文件不存在。
 
@@ -721,64 +726,74 @@ END AS effective_captured_at
 
 导入项 success 与当前标签间的同媒体来源约束，采用可延期约束触发器或统一提交服务验证；不能先永久提交 success 再异步更新一半关联。失败事务可单独保存 failed 批次与错误，但不能保存成已成功的业务更新。
 
-## 13. 查询、独立事件与统计
+## 13. 查询、独立拍摄标记与统计
 
-### 13.1 查询事实链
+### 13.1 查询事实链与维护统计
 
-物种记录：media_species → media → camera_deployment → camera → location → region。项目范围通过有效 project_location 筛选，优先使用 EXISTS，避免多项目关联展开后重复计数。
+物种记录：media_species → media → camera_deployment → camera → location → region。项目范围通过有效 project_location 用 EXISTS 筛选，避免多项目关联展开后重复计数。
 
-个体记录：media_individual → individual，以及 media → 周期 → 机位 → 位点。个体出现记录只包含已确认身份；豹分布位点从豹物种标注查，不局限于已有个体档案的媒体。未知个体不计入独立个体数。
+个体记录：media_individual → individual，以及 media → 周期 → 机位 → 位点。个体出现只包含已确认身份；豹分布位点从豹物种标注查，不局限于有个体档案的媒体。未知个体不计入独立个体数。
 
-回收统计改以 camera_visit 的实际回收尝试为单位，retrieved / (retrieved+not_retrieved) 表示“已记录回收尝试中的成功比例”，不能冒充计划回收完成率。安装和未涉及回收的停用不入分母。若要计划完成率，需另行定义计划清单，不能把开放周期数量当作计划数。跨项目共享操作按 visit.id 去重，无分母返回不可计算。
+维护按 camera_maintenance.id 计数，维护类型分别统计安装、回收、停用。需要展示数据取回比例时，以有数据交接结果的维护记录为分母：collected / (collected + not_collected)，并列出维护类型范围；没有数据交接的安装不入分母。该比例不等于计划完成率，后者需要明确计划清单。跨项目共享维护按主键去重，无分母返回不可计算。
 
-### 13.2 statistics_run｜可复现统计运行
+### 13.2 取消独立事件实体
+
+一期只需统计次数，不需要保存可编辑的事件身份、成员集合、事件详情及证据链，因此不建 event、event_media，也不在 media 保存 event_id。判定独立拍摄的规则仍然需要，但结果可直接记录在已有媒体层表中：每组连续拍摄选一个代表文件标 TRUE，后续文件标 FALSE，未判定为 NULL。
+
+文件级统计使用 media.is_independent_capture，不区分物种；物种统计使用 media_species.is_independent_capture，分别对每个物种判定。二者不能互相替代或先按文件级 FALSE 过滤媒体，否则会漏掉后来首次出现的物种。
+
+示例假设：规则按同一周期、同一物种，间隔小于 30 分钟为连续，首个文件为代表。30 分钟仅供说明，不是本项目已确认阈值。
+
+| 媒体 | 时间与物种 | media 文件标记 | 豹关联标记 | 兔狲关联标记 |
+| --- | --- | --- | --- | --- |
+| M1 | 10:00，豹 | TRUE | TRUE | 无该物种关联 |
+| M2 | 10:05，豹、兔狲 | FALSE | FALSE | TRUE |
+
+在这个例子中，全文件连续拍摄计 1 次，豹计 1 次，兔狲计 1 次。一个 media 总标记不足以表达两个物种的计数；在已有 media_species 加一个字段即可，无需再建表。
+
+### 13.3 判定、空值和失效
+
+默认规则以布设周期/机位为界，文件级按该周期完整媒体序列排序，物种级按该周期该物种完整序列排序；使用 effective_captured_at，时间相同以 media.id 稳定排序。阈值、比较符号、按前一文件还是组首判断、跨日边界需先确认并记入应用中的版本化统计规则配置；未确认前标记保持 NULL，independence_status=pending，不输出正式独立拍摄次数。
+
+当前物种标注层未解决复核过滤规则前，默认按当前全部有效关联判定。如需只统计已复核物种，须以该候选集合重新计算，不能仅在预存标记上再筛 review_status。删除、新增、改挂媒体、物种标签变更或时间校准均将受影响周期设为 stale，不能只更新一行，因为它可能改变下一段连续拍摄的代表文件。
+
+重算锁定受影响周期或比较输入版本，基于完整序列更新文件及物种标记，最后同事务写入规则版本、输入签名及 ready。若部分媒体时间未知，可保留其 NULL，但 ready 仍要求“所有可判定行已完成、未知行显式列出”；正式统计检查所选范围是否存在 NULL，不能将 NULL 当 FALSE。ready 表示已执行判定，不表示资料完整。读取统计时校验 status、规则版本和输入签名，失败返回待重算或资料不足。无法定位拍摄时间的媒体，即使不能通过时间筛选，也必须在相关周期资料完整性检查中报告，不能先过滤掉。
+
+常用规则下，对每个物种独立次数就是符合范围且标 TRUE 的关联行数，项目联结采用 EXISTS 避免重复。正式结果须同时返回未知标记数量。RAI 分子使用物种标记，不能使用文件总标记。
+
+### 13.4 固定默认标记与临时统计范围
+
+预存标记只适用于它所对应的完整候选集合、分组和规则。筛选导致代表文件被排除时，直接累加 TRUE 标记 可能错误。例如一组文件为 09:59、10:01，代表是 09:59；若只统计 10:00 以后拍摄，则“范围内重新去重”应计 10:01 为 1 次，不能直接得到 0。
+
+默认统计定义为“先确定完整候选范围，再在该范围内重新判定”。完整周期、全部物种关联且规则与缓存一致时复用标记；时间截取、复核筛选、候选项目区间或分组变化时，在查询服务中临时重算，不覆盖默认标记。没有事件表也能完成该计算。物种、机位、周期等不改变组内候选的筛选可以直接复用。
+
+对拍按位点合并、跨周期合并或临时改变阈值时也临时重算；默认字段不保存多套口径。只有后续需要多套结果长期并存、事件详情或人工合并拆分时，才重新评估事件或独立判定结果表。
+
+### 13.5 statistics_run｜可选统计快照
+
+该表只用于保存需下载、复现或审计的正式统计，不参与日常独立拍摄判定；简单查询无需每次创建运行记录。
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | created_by_id | UUID | 必填 | FK → app_user.id |
 | run_status | VARCHAR(30) | 必填 | completed / insufficient_data / failed |
 | filter_snapshot | JSONB | 必填 | 区域、项目、位点、物种、时间等稳定 ID 条件 |
-| rule_snapshot | JSONB | 必填 | 事件间隔、边界、分组、对拍、时区、日界和工作量规则 |
-| input_snapshot | JSONB | 必填 | 不可变的完整输入值或对应不可变文件清单 |
-| input_signature | VARCHAR(64) | 可空 | 输入版本或 SHA-256 签名，用于识别过期 |
+| rule_snapshot | JSONB | 必填 | 间隔、比较方式、范围边界、分组、对拍、时区、工作日等规则 |
+| input_snapshot | JSONB | 必填 | 不可变输入值，包括媒体时间、物种、工作量和判定标记或临时计算结果 |
+| input_signature | VARCHAR(64) | 可空 | 输入签名，用于识别过期 |
 | algorithm_version | VARCHAR(100) | 必填 | 算法版本 |
-| result_snapshot | JSONB | 必填 | 各分组事件数、有效工作量、RAI 和不可计算原因 |
-| is_stale | BOOLEAN | 必填 / false | 输入或规则更正后置 true |
+| result_snapshot | JSONB | 必填 | 各分组独立拍摄次数、有效工作量、RAI 和不可计算原因 |
+| is_stale | BOOLEAN | 必填 / false | 输入更正后置 true |
 
-使用通用 created_at 作为运行时间；完成后的 input/rule/result 不可改写，不使用通用 updated_at/row_version；仅允许维护 is_stale 状态并审计。input_snapshot 至少含媒体 ID 及有效时间、物种标签、周期和校准版本、有效工作日期与采信依据、项目关联版本、数据截止点。仅保留可能继续被修改的 ID 列表不足以复现。
+使用通用 created_at；完成后的输入、规则、结果不可改写，不使用通用 updated_at/row_version，只维护 is_stale 并审计。仅保存可能继续被修改的 ID 列表不足以复现；可按需将完整不可变输入存为受控文件。
 
-统计运行、读取和导出都重新验证范围权限。跨区域混合快照不可整体提供给仅有部分权限的账号；应重新计算其可见子集。快照不是长期有效的授权凭证。
+计算、读取和导出重新验证当前权限。跨区域混合快照不能整体提供给只有部分范围权限的账号，应重新计算其可见子集。快照不是长期授权凭证。
 
-### 13.3 event｜周期内派生独立事件
+### 13.6 RAI 与工作量口径
 
-| 字段 | SQL 类型 | 要求 / 默认 | 说明 |
-| --- | --- | --- | --- |
-| statistics_run_id | UUID | 必填 | FK → statistics_run.id |
-| deployment_id | UUID | 必填 | FK → camera_deployment.id，满足指南“挂靠 deployment” |
-| species_id | UUID | 必填 | FK → species.id |
-| event_start_at | TIMESTAMPTZ | 必填 | 成员媒体最早有效拍摄时间 |
-| event_end_at | TIMESTAMPTZ | 必填 | 成员媒体最晚有效拍摄时间 |
+RAI = 某物种独立拍摄次数 / 有效相机工作日 × 100。分子来自该物种标记或相同规则的临时重算，不来自 media 总标记。工作量可靠且 >0 才可计算；未知或不可信返回 NULL 并附原因，不能填 0。可靠工作量且没有探测时可为 0。
 
-CHECK(end≥start)。event 是按规则派生的物种事件，不是人工原始标注，不代表视频中动物实际停留时段。每个事件必须至少一条成员媒体，成员均同 deployment 且有该物种标签。规则版本属于 run，不在同一 run 混用阈值。
-
-本版默认不跨周期合并 event，保证归属唯一；具体阈值、相邻间隔还是距事件起点、跨日处理均待确认，不能擅定为已认可的 30 分钟。按位点统计对拍去重时，保留各机位周期内 event，再在该 run 的结果中保存位点合并组与源 event ID 快照，不把一条 event 同时挂两个 deployment。合并分子和工作量分母必须采用一致口径。
-
-### 13.4 event_media｜事件成员
-
-| 字段 | SQL 类型 | 要求 / 默认 | 说明 |
-| --- | --- | --- | --- |
-| event_id | UUID | 必填 | FK → event.id |
-| media_id | UUID | 必填 | FK → media.id |
-
-复合主键 (event_id,media_id)，不使用通用 id/时间字段。约束触发器或事件生成服务校验：同一 run、同一物种、同一媒体仅属于一个 event；媒体所属 deployment 与 event 一致。多物种媒体可属于多个不同物种事件。成员、事件与结果完成状态整体提交，不能先 completed 后补成员。
-
-### 13.5 RAI 与工作量口径
-
-RAI = 独立事件数 / 有效相机工作日 × 100。工作量必须可靠且 >0 才可计算；未知或不可信返回 NULL 并附原因，不能填 0。可靠工作量且没有探测时可为 0。
-
-正式运行前至少明确：事件阈值和比较方式、跨周期与跨日边界、按机位还是位点、对拍合并方式、工作日期按首尾日如何计算、同日回收再布设如何去重、部分日期筛选时如何裁剪工作量、多项目重复位点去重方式。未确定或样例不足时 run_status=insufficient_data，而非输出默认公式得来的正式 RAI。
-
-相机日与位点日不是同一量。按机位相加的工作量不能直接用于已按位点去重的分子。周期内存在未明确停机而不能核实连续有效区间时，不用日期跨度充当有效工作日。
+正式计算前明确阈值、比较方式、候选范围、按机位还是位点、对拍处理、首尾日纳入方式及时间裁剪。相机日与位点日不可混用；去重分子与工作量分母须一致。不能用“最早至最晚媒体”推断工作日；存在不明停机时返回资料不足。
 
 ## 14. 索引、删除及关键约束
 
@@ -789,9 +804,9 @@ RAI = 独立事件数 / 有效相机工作日 × 100。工作量必须可靠且 
 | project、location | 各自区域内业务代码唯一；(region_id,id) 唯一 |
 | project_location | PK(project_id,location_id)；(location_id,project_id) WHERE is_active=true |
 | camera | UNIQUE(location_id,camera_code) |
-| camera_visit | UNIQUE(camera_id,operation_date,operation_sequence)；(data_retrieval_batch,operation_date) |
-| camera_deployment | 起始/结束操作非空唯一；每机位最多一条 open；(camera_id,deployment_start_date) |
-| media | UNIQUE(storage_path)；(deployment_id,captured_at)；(retrieval_visit_id)；(individual_annotation_status)；file_hash 非空检索索引 |
+| camera_maintenance | UNIQUE(camera_id,maintenance_date,maintenance_sequence)；(maintenance_batch,maintenance_date) |
+| camera_deployment | 起始/结束维护非空唯一；每机位最多一条 open；(camera_id,deployment_start_date) |
+| media | UNIQUE(storage_path)；(deployment_id,captured_at)；(maintenance_id)；(individual_annotation_status)；file_hash 非空检索索引 |
 | media_derivative | (media_id,derivative_type) |
 | media_species | UNIQUE(media_id,species_id)；(species_id,media_id)；来源 item 外键索引 |
 | media_individual | UNIQUE(media_id,individual_id)；(individual_id,media_id)；来源 item 外键索引 |
@@ -801,22 +816,22 @@ RAI = 独立事件数 / 有效相机工作日 × 100。工作量必须可靠且 
 | 两类导入 item | (批次_id,media_id) 非空唯一；(media_id) |
 | user_permission | 区域、项目两种部分唯一索引；(region_id,user_id)、(project_id,user_id) |
 | audit_log | (entity_type,entity_id,created_at)；(actor_id,created_at) |
-| statistics_run、event、event_media | (created_by_id,created_at)；(statistics_run_id,deployment_id,species_id,event_start_at)；event_media(media_id) |
+| statistics_run | (created_by_id,created_at) |
 | location 空间 | 合法坐标的 PostGIS GiST 表达式索引 |
 
 跨周期校准后的有效时间先由 JOIN 视图计算，普通 captured_at 索引不能直接当作已覆盖所有校准筛选。数据量增长后可维护有版本的投影或物化视图，但须在周期偏移变更时同步失效；不在第一版引入无必要缓存。
 
 ### 14.2 不能只靠普通外键的检查
 
-以下由约束触发器或统一业务事务服务实现，并在后续迁移测试中覆盖：操作顺序与周期不重叠；周期日期与边界操作一致；媒体回收操作属于同机位且成功；来源 item 与当前标签同媒体且 success；代表图属于自身；个体物种与媒体物种一致；当前号与历史号跨表不冲突；event 至少一成员且归属、物种正确；授权者当下确有对应管理权限。
+以下由约束触发器或统一业务事务服务实现，并在后续迁移测试中覆盖：维护顺序与周期不重叠；周期日期与边界维护一致；媒体回收维护属于同机位且成功；来源 item 与当前标签同媒体且 success；代表图属于自身；个体物种与媒体物种一致；当前号与历史号跨表不冲突；独立标记与周期判定状态、规则版本及输入签名一致；授权者当下确有对应管理权限。
 
 复合外键、唯一索引和 CHECK 能覆盖的规则优先交给数据库，权限检查与可解释反馈由后端负责；不让前端成为唯一校验位置。
 
 ### 14.3 删除与历史
 
-位点、机位、操作、周期、媒体、个体、来源批次被引用时禁止直接删除。误建且未引用的事实按第 9.3 节权限删除并审计。停用不释放业务编号，不改变历史归属；真实地理迁移须新建 location/camera，不把历史影像移到新地点。
+位点、机位、维护、周期、媒体、个体、来源批次被引用时禁止直接删除。误建且未引用的事实按第 9.3 节权限删除并审计。停用不释放业务编号，不改变历史归属；真实地理迁移须新建 location/camera，不把历史影像移到新地点。
 
-派生文件与统计事件可按明确清理策略重建，但不能借清理统计级联删除原始事实。当前标签替换不等于删除其历史；导入快照、编号变更与校准审计应保留。原始媒体删除涉及 NAS 文件和数据库引用，需单独有可恢复的业务流程，本设计不把 SQL 行删除等同于物理文件已清理。
+派生文件与独立拍摄标记可按明确策略重建，但不能借清理统计级联删除原始事实。当前标签替换不等于删除其历史；导入快照、编号变更与校准审计应保留。原始媒体删除涉及 NAS 文件和数据库引用，需单独有可恢复的业务流程，本设计不把 SQL 行删除等同于物理文件已清理。
 
 ## 15. V1.4／当前实现到 V1.5 的迁移设计
 
@@ -838,7 +853,7 @@ V1.4 是设计文档，不是当前程序实际结构。仓库快照中的 backe
 | 周期 site_id + device_code | camera(location_id,camera_code) | 按可靠组合去重创建机位并建立 ID 映射 |
 | camera_deployment | camera_deployment | 保留原周期 id；改为 camera_id；不为漂亮边界重新生成全部周期 |
 | work_start_date/end_date 或 work_start_at/end_at | effective_work_start_date/end_date | 只有证据充分时转换日期与 verified；不自动当作布设边界 |
-| data_retrieval_*、maintenance_by、issue_type、notes | camera_visit 与周期说明 | 真实可确认操作才生成 visit；原字段快照完整归档 |
+| 旧 data_retrieval_*、maintenance_by、issue_type、notes | camera_maintenance 与周期说明 | 真实可确认维护才生成维护记录；原字段快照完整归档 |
 | media_asset | media | 保留媒体 id；camera_deployment_id → deployment_id |
 | media.time_corrected_at | media.time_corrected_at | 保留为绝对覆盖值，不被周期偏移覆盖或二次叠加 |
 | species_annotation | media_species | 保留 id 及当前标签，来源可靠时关联新 item，否则 legacy |
@@ -848,21 +863,24 @@ V1.4 是设计文档，不是当前程序实际结构。仓库快照中的 backe
 | individual_relationship | 一期不启用 | 导出或只读归档，保留引用与备份，不直接 DROP 丢数据 |
 | 繁殖三表 | 后续模型档案 | 已存在数据保留归档，不作为一期必验表，不随一期升级删除 |
 | app_user.role、regions、旧授权表 | account_type、user_permission | 按实际角色和人工确认范围生成，不能自动扩大权限 |
-| independent_detection_event / detection_event_media | event / event_media | 派生数据按新规则重算；旧统计作为历史保留 |
+| 旧事件及事件成员表（若已实现） | media / media_species 独立标记 | 不迁入一期事件实体；按确认规则重算，旧统计只读归档 |
+| 旧生境、地形、环境字典（若已实现） | location 字段的固定代码及 CHECK | 核对允许值后解除外键，保留已用代码和历史映射 |
+| 本版初稿的 camera_visit 与来源、周期外键 | camera_maintenance 及维护外键 | 属于设计修订；只有实际建过旧表才编写改名迁移，不假定已落库 |
 
-旧维护人员和维护内容只能映射到确有依据的操作。旧“未回收”周期未必存在一次真实回收尝试，不能据此批量制造 camera_visit(retrieval,not_retrieved)。无法恢复起始或结束操作的周期采用 legacy_unknown，保留旧日期和说明，待人工补齐后再升级到正常状态。
+旧维护人员和维护内容只能映射到确有依据的维护。旧“未回收”周期未必存在一次真实回收尝试，不能据此批量制造 camera_maintenance(collect,not_collected)。无法恢复起始或结束维护的周期采用 legacy_unknown，保留旧日期和说明，待人工补齐后再升级到正常状态。
 
 ### 15.3 分步迁移
 
 1. 盘点并备份：数据库、迁移版本、NAS 文件清单、旧字段及旧区域权限；记录可恢复检查点。输出重复编号、孤立外键、超长文本、未知时区、重叠周期、旧校准和词表冲突清单。
-2. 新增结构与可空兼容列：初始化固定 region、project、project_location、camera、camera_visit、user_permission；已存在的旧结构先保留。项目和位点关联必须由确认的项目清单建立，不自动把所有位点挂到“默认项目”并开权限。
-3. 保留 ID 回填事实：机位组合映射，周期改挂机位，可靠操作才生成边界；媒体与标签保留原 UUID。不能用旧有效工作起点猜首次安装日期，也不能为满足 NOT NULL 造记录。
+2. 新增结构与可空兼容列：初始化固定 region、project、project_location、camera、camera_maintenance、user_permission；已存在的旧结构先保留。项目和位点关联必须由确认的项目清单建立，不自动把所有位点挂到“默认项目”并开权限。
+3. 保留 ID 回填事实：机位组合映射，周期改挂机位，可靠维护才生成边界；媒体与标签保留原 UUID。不能用旧有效工作起点猜首次安装日期，也不能为满足 NOT NULL 造记录。
 4. 校准迁移：新增周期偏移默认 NULL，保留全部单文件校准。只有确认同周期所有校准差值确为同一秒数且来源可靠，才提出统一偏移候选；经检查后可清除被等价替代的覆盖值并保留迁移审计，否则原样保留。
 5. 授权迁移：旧 admin → admin；operator/viewer → normal。旧区域范围只映射到确认的新 region；原二级范围若不能等价映射到 project，不扩大到整个区域。旧只读坐标标志仅投影到原已授权范围，不能生成全局可见。迁移前后按账号比较可见数据和可写动作。
-6. 加约束与切换：清理冲突后验证复合 FK、唯一键、CHECK 和关键触发器；更新 API、导入模板、权限过滤、查询视图和文档引用后切换。单纯改数据库表名而不改 API 不构成完整升级。
-7. 验证与归档：按第 16 节用真实样例验收，保留旧关系及旧繁殖数据只读归档和映射清单。观察完成后再另定旧字段清理，不在本轮文档修订中删除数据。
+6. 固定选项与独立标记：将确认词表落实为字段 CHECK；新标记先为 NULL，确认规则后按完整周期计算并记录签名，不把旧值默认设为 FALSE。
+7. 加约束与切换：清理冲突后验证复合 FK、唯一键、CHECK 和关键触发器；更新 API、导入模板、权限过滤、查询视图和文档引用后切换。单纯改数据库表名而不改 API 不构成完整升级。
+8. 验证与归档：按第 16 节用真实样例验收，保留旧关系及旧繁殖数据只读归档和映射清单。观察完成后再另定旧字段清理，不在本轮文档修订中删除数据。
 
-回滚应在切换前准备数据库和文件备份并演练。切换后已有新写入时，不能仅把表名改回就称为可逆；需停止写入并导出增量，采用经验证的恢复或前向修复方案，避免丢失 V1.5 新操作、项目授权和校准记录。
+回滚应在切换前准备数据库和文件备份并演练。切换后已有新写入时，不能仅把表名改回就称为可逆；需停止写入并导出增量，采用经验证的恢复或前向修复方案，避免丢失 V1.5 新维护、项目授权和校准记录。
 
 ## 16. 评审、验收与待明确事项
 
@@ -876,10 +894,10 @@ V1.4 是设计文档，不是当前程序实际结构。仓库快照中的 backe
 | 区域 read、项目 A work | A 为 work，其他项目继承 read |
 | normal 仅项目 work 调用授权或改周期接口 | 拒绝；不能反向取得区域管理权 |
 | 区域管理员尝试授予他人 manage | 拒绝；只能由全局管理员任命区域管理员 |
-| 8 月安装、9 月回收继续、10 月停用 | 两周期共享中间 visit；旧周期型号不被新型号覆盖 |
+| 8 月安装、9 月回收继续、10 月停用 | 两周期共享中间 maintenance；旧周期型号不被新型号覆盖 |
 | 两个请求并发开启同机位周期 | 最多一个 open，另一个收到可解释冲突 |
-| 同机位同批次真实两次回收 | 允许不同 visit，依操作日期和同日序号区分 |
-| 回收空卡或文件损坏 | retrieved，有异常说明；不伪造零工作量 |
+| 同机位同批次真实两次回收 | 允许不同 maintenance，依维护日期和同日序号区分 |
+| 回收空卡或文件损坏 | collected，有异常说明；不伪造零工作量 |
 | 失败回收仍继续布设 | 保留原开放周期，不虚构成功回收 |
 | 周期偏移 +120 秒 | 原始时间保留；未单独覆盖媒体统一 +120 秒；旧统计过期 |
 | 已有绝对单文件校准 | 优先用该值，不再叠加周期偏移 |
@@ -891,6 +909,10 @@ V1.4 是设计文档，不是当前程序实际结构。仓库快照中的 backe
 | 周期内故障后修复但区间不明 | 可查询媒体；RAI 返回工作量资料不足 |
 | 一期不使用个体关系 | 不出现一期新增关系流程，旧关系数据仍可追溯 |
 | 已撤权账号读取旧导入、代理 URL 或统计快照 | 重新鉴权，不能复用旧范围绕过权限 |
+| M1 仅豹、随后 M2 豹加兔狲 | M2 文件级 FALSE、豹 FALSE、兔狲 TRUE；物种统计不被文件总标记过滤 |
+| 标记尚未判定或输入更正 | NULL 不当 FALSE；stale 不能冒充当前有效统计 |
+| 时间筛选剔除原代表文件 | 在筛选后的候选集合重新判定，不直接 COUNT 默认标记 |
+| location 导入配置中未定义的生境或地形 | 前后端和数据库 CHECK 一致拒绝，无需字典表 |
 
 以上是后续实施的验收要求，文档输出不代表已经运行这些业务测试。对本文件仅进行表清单、引用、示例和版本一致性校核。
 
@@ -900,16 +922,16 @@ V1.4 是设计文档，不是当前程序实际结构。仓库快照中的 backe
 | --- | --- | --- |
 | 相机是否需要库存管理？ | 一期不做；camera 仅表示机位 | 若需要，增加实体设备/库存流转模型，不把 camera 变成资产 |
 | 位点是否需要历史编号？ | 不预建历史编号表；保留迁移映射和审计 | 若需要，增加 location_alias，定义区域内当前号与旧号冲突规则 |
-| 一个周期内是否存在故障后修复？ | 单段有效工作区间；不确定时不认证工作量 | 若存在，增加多段有效工作区间，明确维修操作类型与周期切分规则 |
+| 一个周期内是否存在故障后修复？ | 单段有效工作区间；不确定时不认证工作量 | 若存在，增加多段有效工作区间，明确维修的维护类型归类与周期切分规则 |
 
 ### 16.3 其他实现前待验证事项
 
-项目—位点关联是否应按有效时间约束历史访问；项目工作是否需要直接维护共享监测基础数据；个体档案维护责任和跨区域代表图共享策略；区域完整名单和项目类型、地形、生境词表；XMP 与 Excel 真实样例、来源时区及 mtime 稳定性；失败回收后撤机和停用后取卡样例；独立事件阈值、对拍去重和有效工作日规则。以上均可用本版模型展开确认，不应在程序中隐藏未经确认的默认业务结论。
+项目—位点关联是否应按有效时间约束历史访问；项目工作是否需要直接维护共享监测基础数据；个体档案维护责任和跨区域代表图共享策略；区域完整名单和项目类型、地形、生境词表；XMP 与 Excel 真实样例、来源时区及 mtime 稳定性；失败回收后撤机和停用后取卡样例；独立拍摄阈值、对拍去重和有效工作日规则。以上均可用本版模型展开确认，不应在程序中隐藏未经确认的默认业务结论。
 
 ## 17. 交付与版本说明
 
 本版完整替换 V1.4 中冲突的组织、现场记录、校准和授权模型，保留未冲突的原始文件管理、稳定身份、导入快照、审计及可复现统计原则。Markdown 与 Word 由同一正文生成，旧版 V1.3/V1.4 保留。
 
-交付为数据库设计文档 V1.5，不包含已执行的迁移、API 改造或生产部署。后续代码实施须以真实运行库为基线，不能把设计文件中已描述的 30 张表当成已建库状态。
+交付为数据库设计文档 V1.5，不包含已执行的迁移、API 改造或生产部署。后续代码实施须以真实运行库为基线，不能把设计文件中已描述的 25 张表当成已建库状态。
 
-参考：[camtrapR](https://cran.r-project.org/web/packages/camtrapR/index.html) 用于后续事件与工作量口径讨论；本版没有把其默认参数视为本项目已确认规则。
+参考：[camtrapR](https://cran.r-project.org/web/packages/camtrapR/index.html) 用于后续独立拍摄与工作量口径讨论；本版没有把其默认参数视为本项目已确认规则。
