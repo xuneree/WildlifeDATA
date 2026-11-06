@@ -6,7 +6,7 @@
 | location | 位点 | 地理上一个监测位置，挂靠region，可关联多个project | 如701 |
 | camera | 相机 | 位点内的机位编号，非实体设备，挂靠location | 如701A、701B |
 | maintenance | 维护 | 对机位的一次现场维护，分安装、回收、停用三类，挂靠camera | 如701A_maintained_20261001 |
-| deployment | 布设 | 机位两次边界维护之间的布设周期，首次从安装开始，挂靠camera | 如701A_deployed_20260801~20260930 |
+| deployment | 布设 | 机位两次维护之间的布设周期，首次从安装开始，挂靠camera | 如701A_deployed_20260801~20260930 |
 | media | 媒体文件 | 相机在某个布设周期中拍摄的媒体文件，挂靠deployment | 如IMG00001.MP4 |
 | annotation | 标注 | 关联media与species或individual的标注信息 | 如IMG00001.MP4-leopard |
 | species | 物种 | 全系统通用的物种字典 | 如1-leopard |
