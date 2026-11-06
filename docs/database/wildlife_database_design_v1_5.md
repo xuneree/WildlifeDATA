@@ -51,8 +51,8 @@ V1.5 · 2026-11-06（维护与统计简化修订） · PostgreSQL + PostGIS
 | project | 有明确目标的监测项目，只属于一个 region | 和顺常规监测、和顺 X337 |
 | location | 地理监测位置，只属于一个 region；可关联零个或多个同区域 project | 701 |
 | camera | location 内稳定机位；更换实体相机不更换机位 ID | 701A、701B |
-| camera_maintenance | 对一个 camera 的一次现场维护 | 安装、回收、停用 |
-| camera_deployment | 同一 camera 两个边界维护之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
+| maintenance | 对 camera 的一次现场维护，包含安装、回收、停用操作，有批次 | 2026-10-01回收记录 |
+| deployment | 同一 camera 两次维护之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
 | media | 一个原始视频或图片，只属于一个 deployment | IMG00001.MP4 |
 | annotation | 媒体与物种或个体的当前有效关联 | media_species、media_individual |
 | species | 全系统物种字典 | leopard |
