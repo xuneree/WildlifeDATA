@@ -6,7 +6,7 @@
 
 - 先核对仓库、分支、`git status` 和 `git rev-parse HEAD`，再 `git fetch origin` 比较远端；不能因本地只有旧资料就从旧版本继续编号。有未提交修改时先保留并说明，不用 reset/clean 丢弃，也不自动套用旧 stash。离线或无法读取远端时明确基线未核实。
 - 读取 [当前基线与交接](docs/PROJECT_STATUS.md)，按其中入口读取当前需求、guide、设计和目标 demo；再核实入口与远端文件是否一致。该文件只提供最新文档入口、当前进展和必要待办，不替代业务正文。
-- 开工更新须说明本次基准提交及实际修改对象。`frontend` 正式应用、`docs/demos/field-forms` 表单原型、`docs/prototypes/module01` 旧原型是不同对象，不互相替代。
+- 开工更新须说明本次基准提交及实际修改对象。`frontend` 正式应用、`docs/demos/module01` 表单原型、`docs/archive/module01-legacy` 历史原型是不同对象；当前模块基线见 `docs/requirements/module01-camera-management-v2_0.md`，`docs/prototypes/module01` 仅作迁移入口。
 
 - 开始开发任务时，先读取本文件、工作路径上适用的子目录指令和与本次任务相关的 guide 文件，再进行设计或修改。
 - 首次任务更新中简短说明已读取本约定；若尚未找到需求依据，明确说明，不假定已完成一致性检查。

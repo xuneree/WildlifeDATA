@@ -10,10 +10,10 @@
 | [requirements](requirements) | 持续维护的业务需求 | 全平台总体需求、各模块详细需求、功能分期与验收要求，以及对应的评审意见、业务逻辑图 |
 | [database](database) | 数据库设计 | 表结构、字段、实体关系、约束、索引和迁移设计说明；保留历史版本并标明当前版本 |
 | [design](design) | 交互与界面设计 | 交互规范、页面流程、线框稿、视觉设计稿及模块设计说明；后续设计稿按模块组织 |
-| [demos/field-forms](demos/field-forms) | 当前野外表单交互原型 | 独立 React/Ant Design 原型、源码 ZIP 和预览入口；不等于正式前端或旧低保真原型 |
-| [prototypes](prototypes) | 可操作或可演示的原型 | 可打开的 HTML、原型打包文件、演示 PDF、页面截图及原型验证记录；当前为模块 01 低保真原型 |
+| [demos/module01](demos/module01) | 模块1-相机管理 Demo | 独立 React/Ant Design 原型、源码 ZIP 和预览入口；不等于正式前端或旧低保真原型 |
+| [prototypes](prototypes) | 可操作或可演示的原型 | 可打开的 HTML、原型打包文件、演示 PDF、页面截图及原型验证记录；旧路径保留迁移入口；历史资料见 [archive/module01-legacy](archive/module01-legacy) |
 
-当前需求入口：[总体需求 V1.4](requirements/platform-requirements-v1_4.md) · [Word](requirements/platform-requirements-v1_4.docx) · [模块 01 详细需求](requirements/01-camera-sites-and-retrieval.md)。
+当前需求入口：[总体需求 V1.4](requirements/platform-requirements-v1_4.md) · [Word](requirements/platform-requirements-v1_4.docx) · [模块1-相机管理 V2.0](requirements/module01-camera-management-v2_0.md)。
 
 当前数据库入口：[数据库设计 V1.5](database/wildlife_database_design_v1_5.md) · [Word](database/wildlife_database_design_v1_5.docx)。V1.5 已同步工作组及申请审批、生境观察、维护后参数、多段工作量和坐标/下载控制，项目继承工作组权限。本次[设计指南](database/database_design_guide.md)优先于旧版冲突规则；V1.3/V1.4 保留为历史设计。
 
