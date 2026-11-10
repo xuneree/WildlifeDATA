@@ -26,7 +26,8 @@ function Adapter({item,refresh,invalid,batches}){
  const change=(value,type='change')=>{if(el.type==='checkbox'||el.type==='radio')el.checked=!!value;else el.value=value??'';emit(el,type);finish();};
  const common={id,disabled:el.disabled,status:invalid===el?'error':undefined};
  let node;
- if(kind==='batch'){node=<AutoComplete {...common} defaultActiveFirstOption={false} onInputKeyDown={e=>{if(e.key==='Tab'){e.stopPropagation();setBatchOpen(false)}}} style={{width:'100%'}} value={el.value} options={batches.map(value=>({value,label:value}))} filterOption={false} open={batchOpen} onOpenChange={setBatchOpen} onFocus={()=>setBatchOpen(true)} onBlur={()=>{setBatchOpen(false);emit(el);finish()}} onChange={value=>change(value,'input')} onSelect={value=>{change(value);setBatchOpen(false)}} allowClear/>;
+ if(kind==='output'){node=<Typography.Text strong id={id}>{el.textContent}</Typography.Text>;
+ }else if(kind==='batch'){node=<AutoComplete {...common} defaultActiveFirstOption={false} onInputKeyDown={e=>{if(e.key==='Tab'){e.stopPropagation();setBatchOpen(false)}}} style={{width:'100%'}} value={el.value} options={batches.map(value=>({value,label:value}))} filterOption={false} open={batchOpen} onOpenChange={setBatchOpen} onFocus={()=>setBatchOpen(true)} onBlur={()=>{setBatchOpen(false);emit(el);finish()}} onChange={value=>change(value,'input')} onSelect={value=>{change(value);setBatchOpen(false)}} allowClear/>;
  }else if(kind==='projects'){
   const checks=[...el.querySelectorAll('input[name=loc_projects]')];node=<Select id="antd_projectToggle" mode="multiple" allowClear value={checks.filter(c=>c.checked).map(c=>c.value)} options={checks.map(c=>({value:c.value,label:optionText(c)}))} maxTagCount="responsive" style={{width:'100%'}} onChange={values=>{checks.forEach(c=>c.checked=values.includes(c.value));emit(checks[0]);finish()}} aria-label="关联项目"/>;
  }else if(kind==='select'){
@@ -72,11 +73,11 @@ function collectControls(){
   if(kind==='group'&&!el.querySelector('input'))continue;
   el.style.display='none';add(kind,el);
  }
- for(const el of surface.querySelectorAll('input,select,textarea,button')){
+ for(const el of surface.querySelectorAll('input,select,textarea,button,output')){
   if(isUI(el)||el.closest('#legacyNavigation,dialog,.options,#loc_projects,.uploads,#habitatHistory'))continue;
   if(el.type==='file')continue;
   if(el.tagName==='INPUT'&&(el.type==='checkbox'||el.type==='radio')){const label=el.closest('label');if(label){label.style.display='none';add('checkbox',el,label);continue;}}
-  el.style.display='none';const kind=el.id==='op_batch'?'batch':el.tagName==='SELECT'?'select':el.tagName==='BUTTON'?'button':'input';const host=add(kind,el);
+  el.style.display='none';const kind=el.tagName==='OUTPUT'?'output':el.id==='op_batch'?'batch':el.tagName==='SELECT'?'select':el.tagName==='BUTTON'?'button':'input';const host=add(kind,el);
   if(el.id){const label=surface.querySelector(`label[for="${CSS.escape(el.id)}"]`);if(label)label.htmlFor='antd_'+el.id;}
  }
  return items;
