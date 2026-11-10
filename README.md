@@ -1,5 +1,7 @@
 # 红外相机数据管理平台 · WildlifeDATA
 
+继续已有任务前，先核对远端并读取 [协作约定](AGENTS.md) 和 [当前基线与交接](docs/PROJECT_STATUS.md)。
+
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
 最新总体需求为[需求 V1.4（工作组及指南同步版）](docs/requirements/platform-requirements-v1_4.md)，提供[总体需求 Word V1.4](docs/requirements/platform-requirements-v1_4.docx)。
 `docs/source` 仅保留创建项目时提供的原始文档；后续需求修订放在 `docs/requirements`，数据库设计修订放在 `docs/database`，交互及界面设计稿放在 `docs/design`。

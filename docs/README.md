@@ -1,5 +1,7 @@
 # 文档目录说明
 
+跨对话先读 [当前基线与交接](PROJECT_STATUS.md)，再按下面目录进入业务正文；协作流程见根目录 [AGENTS.md](../AGENTS.md)。
+
 本目录按业务归属组织，相关文档、评审意见和图件放在同一目录。业务需求、数据库设计和界面设计分别维护；Markdown 便于在 GitHub 阅读和查看修改记录，Word 便于下载、批注及评审。同一版本的两种格式保持一致。
 
 | 目录 | 用途 | 当前内容与后续存放规则 |
@@ -8,6 +10,7 @@
 | [requirements](requirements) | 持续维护的业务需求 | 全平台总体需求、各模块详细需求、功能分期与验收要求，以及对应的评审意见、业务逻辑图 |
 | [database](database) | 数据库设计 | 表结构、字段、实体关系、约束、索引和迁移设计说明；保留历史版本并标明当前版本 |
 | [design](design) | 交互与界面设计 | 交互规范、页面流程、线框稿、视觉设计稿及模块设计说明；后续设计稿按模块组织 |
+| [demos/field-forms](demos/field-forms) | 当前野外表单交互原型 | 独立 React/Ant Design 原型、源码 ZIP 和预览入口；不等于正式前端或旧低保真原型 |
 | [prototypes](prototypes) | 可操作或可演示的原型 | 可打开的 HTML、原型打包文件、演示 PDF、页面截图及原型验证记录；当前为模块 01 低保真原型 |
 
 当前需求入口：[总体需求 V1.4](requirements/platform-requirements-v1_4.md) · [Word](requirements/platform-requirements-v1_4.docx) · [模块 01 详细需求](requirements/01-camera-sites-and-retrieval.md)。
