@@ -186,6 +186,7 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 | --- | --- | --- | --- |
 | work_group_id | UUID | 必填 | FK → work_group.id |
 | location_code | VARCHAR(20) | 必填 | 工作组内唯一，包含停用位点 |
+| grid_code | VARCHAR(50) | 可空 | 网格编号；文本保留前导零，非必填 |
 | longitude | DOUBLE PRECISION | 可空 | -180 至 180 |
 | latitude | DOUBLE PRECISION | 可空 | -90 至 90，与经度同时填写或同时为空 |
 | elevation_m | NUMERIC(8,2) | 可空 | 海拔米，可为合法负值 |
