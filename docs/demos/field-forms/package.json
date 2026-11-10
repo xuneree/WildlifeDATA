@@ -1,0 +1,19 @@
+{
+  "name": "wildlifedata-field-forms",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "antd": "^5.27.6",
+    "@ant-design/icons": "^5.6.1",
+    "dayjs": "^1.11.13"
+  },
+  "devDependencies": {
+    "vite": "^6.3.0"
+  }
+}
