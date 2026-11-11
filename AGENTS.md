@@ -4,6 +4,9 @@
 
 ## 任务开始流程
 
+- 开工先运行 `python3 scripts/task-preflight.py --target <实际修改路径>`；界面任务加 `--ui`，相关需求和 guide 用 `--read <路径>` 列出。脚本只核实基线与必读入口，不能替代阅读。若旧快照没有脚本或本文件，先从远端核对二者及 PROJECT_STATUS，不把“本地未找到”当作“没有约定”。基线未通过时先保留修改并解决差异，不开始设计。
+- 界面交付前对照 `docs/design/ant-design.md` 核验实际组件库、主题、业务文案和截图；在目标 demo README 记录依据及验证结果。功能测试通过不能代替设计符合性通过。
+
 - 先核对仓库、分支、`git status` 和 `git rev-parse HEAD`，再 `git fetch origin` 比较远端；不能因本地只有旧资料就从旧版本继续编号。有未提交修改时先保留并说明，不用 reset/clean 丢弃，也不自动套用旧 stash。离线或无法读取远端时明确基线未核实。
 - 读取 [当前基线与交接](docs/PROJECT_STATUS.md)，按其中入口读取当前需求、guide、设计和目标 demo；再核实入口与远端文件是否一致。该文件只提供最新文档入口、当前进展和必要待办，不替代业务正文。
 - 开工更新须说明本次基准提交及实际修改对象。`frontend` 正式应用、`docs/demos/module01` 表单原型、`docs/archive/module01-legacy` 历史原型是不同对象；当前模块基线见 `docs/requirements/module01-camera-management-v2_0.md`，`docs/prototypes/module01` 仅作迁移入口。
