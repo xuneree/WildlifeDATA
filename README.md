@@ -104,6 +104,6 @@ python3 scripts/test-backend.py --env-file /workspace/.wildlife-data.env
 具体功能状态、文档冲突与待验证事项见 [实施清单](docs/implementation.md)。
 下一阶段优先实现原始媒体索引与播放、XMP 和 Excel 导入，并用真实样例验证匹配规则与事务覆盖。
 
-## 模块 01 设计评审
+## 模块1-相机管理
 
-[低保真原型与使用说明](docs/prototypes/module01/README.md)提供可离线打开的单文件 HTML、九页 PDF 和页面截图。原型使用示例数据，不连接正式业务 API。
+包含位点信息、生境调查、操作记录、布设周期。后续以[需求 V2.0](docs/requirements/module01-camera-management-v2_0.md)和[最新 Demo 源码](docs/demos/module01/README.md)为基线；[旧模块资料](docs/archive/module01-legacy/README.md)仅供历史追溯。正式应用尚未按此基线升级。

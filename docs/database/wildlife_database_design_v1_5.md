@@ -186,8 +186,7 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 | --- | --- | --- | --- |
 | work_group_id | UUID | 必填 | FK → work_group.id |
 | location_code | VARCHAR(20) | 必填 | 工作组内唯一，包含停用位点 |
-| deployment_type | VARCHAR(20) | 必填 / single | single / paired |
-| location_status | VARCHAR(20) | 必填 / active | active / inactive |
+| grid_code | VARCHAR(50) | 可空 | 网格编号；文本保留前导零，非必填 |
 | longitude | DOUBLE PRECISION | 可空 | -180 至 180 |
 | latitude | DOUBLE PRECISION | 可空 | -90 至 90，与经度同时填写或同时为空 |
 | elevation_m | NUMERIC(8,2) | 可空 | 海拔米，可为合法负值 |
@@ -198,7 +197,13 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 | track_storage_path | TEXT | 可空 | 轨迹文件受控存储键，不内嵌文件内容 |
 | notes | TEXT | 可空 | 说明 |
 
-约束：UNIQUE(work_group_id,location_code)、UNIQUE(work_group_id,id)，坐标成对及范围 CHECK。位点表不保存单值“项目”列，由 project_location 查询项目列表。`paired` 是位点布设设计，不强制任意时刻都恰好有两条开放周期。
+约束：UNIQUE(work_group_id,location_code)、UNIQUE(work_group_id,id)，坐标成对及范围 CHECK。位点表不保存单值“项目”列，由 project_location 查询项目列表。两项状态不作为 location 的手填事实列保存。
+
+布设类型和位点启用状态是随时间变化的只读计算结果，不手填，也不固定在布设周期内。按查询时刻每个机位最后一条已知操作后的在位标记汇总：0 台为无布设/停用，1 台为单侧/启用，2 台为对拍/启用。故障、关机、收卡换卡和更换实体设备不等于撤机；撤回或确认丢失且未补装时不在位，丢失后补装恢复在位。丢失日期未知时只在实际检查日期记录已知结果，不倒推未知历史。
+
+维护记录 is_deployed_after 表示操作完成后是否有相机在位，与 working_status_after 和有效工作区间独立。历史按实际操作日期及同日顺序计算，不按录入时间、周期内累计相机数或 open 周期数计算。当前 DATE 模型查询所选日期最后一次操作后的状态；同日多次操作按 maintenance_sequence 排序，不伪造小时分钟。没有记录时按已记录事实计为 0 台，但缺失操作历史不构成已核实的现场停用结论；没有位点编号时不显示计算结论。超过两台保持启用，布设类型显示待核查。
+
+只读视图/查询返回 deployment_type（none/single/paired/unclassified）、location_status（active/inactive）、camera_count 和 as_of。当前结果可缓存回底表以便展示，但缓存必须带计算日期及来源版本，只能由系统重算；不能接受人工写入，也不能用于替代历史操作。
 
 指南反馈位点改号较少，但可能存在别名；别名是否需要维护仍待确认，本版不预建 location_alias。已有旧位点编号在迁移映射与审计中保留，不能丢弃或当作新编号覆盖。若确认需要，按“稳定 location_id + 可追溯历史编号表”扩展，避免逗号拼接字段。
 
@@ -222,7 +227,7 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 | --- | --- | --- | --- |
 | location_id | UUID | 必填 | FK → location.id |
 | camera_code | VARCHAR(20) | 必填 | 位点内机位编号，如 701A |
-| camera_status | VARCHAR(20) | 必填 / active | active / inactive，机位是否启用 |
+| camera_status | VARCHAR(20) | 必填 / active | active / inactive，机位业务录入控制；不代表物理在位 |
 | notes | TEXT | 可空 | 机位说明 |
 
 约束：UNIQUE(location_id,camera_code)。机位非设备，无库存数量、采购、资产流转字段。型号记录在维护和周期；同机位换新实体相机沿用 camera.id。机位挪到新的地理位点须新建 ID，历史媒体不改挂。若未来加入实体资产模块，另建 camera_device 并关联周期，不改变 camera 的含义。
@@ -733,7 +738,7 @@ system_admin 管理全系统，normal 的有效权限仅由当前 work_group_mem
 
 事后补录早期维护时，重新校验该机位时间线并预览受影响周期；已有媒体时不自动改挂或按日期自动拆分。确认后在同一更正事务更新引用和审计，标记受影响统计过期。结束维护被周期引用时禁止直接删除。
 
-停用 location 或 camera 不删除历史，也不伪造现场停用维护；若存在 open 周期，状态变更流程需明确是否补录真实停用维护或只是行政停用。允许历史补录，普通新建默认隐藏停用对象。
+位点启用/停用由相机在位记录计算，不提供人工启停位点的入口；不因故障或数据回收直接改成停用。机位若有独立的业务录入控制状态，不参与物理在位数量判断，也不删除历史或伪造撤回事实。允许历史补录，查询结果按实际操作日期及同日顺序重算。
 
 ## 11. 时间校准与有效工作区间
 
