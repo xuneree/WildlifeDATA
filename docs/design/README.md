@@ -4,6 +4,8 @@
 
 界面技术基准：[Ant Design 使用基准](ant-design.md)。项目采用 Ant Design；本文件规定组件选型与实现方式，不替代业务需求。
 
+当前模块2原型：[物种识别](../demos/module02/README.md)。
+
 当前模块设计：[模块1-相机管理](module01-camera-management.md)。
 
 历史草案：[交互规范 V0.1](interaction-guidelines-v0_1.md) · [模块 01 交互草案 V0.1](module01-interaction-v0_1.md)。草案中的旧区域/周期流程与最新 guide 冲突时，以用户确认的最新需求为准。
