@@ -1,0 +1,24 @@
+{
+  "baseline": "8b21c519b26fe9e91d4fd1d7c2befaf3e0314aac",
+  "branches": {
+    "codex/module01-camera-management-demo": "755e9643962e1d7654b17b9ea377d4ea428160a5",
+    "feat/module01-camera-management-review": "c46c96c75a3b12fc9121c3c111315d9f5e74aa47",
+    "fix/module02-ant-design": "1a67cccb676e9bd450ae26a7ffe611414d4015a5",
+    "codex/module03-individual-demo": "0bdc818c8d76d30aa8c9817d7dfbcfcd44ada22b"
+  },
+  "modules": {
+    "module01": {
+      "source": "docs/demos/module01",
+      "commit": "c46c96c75a3b12fc9121c3c111315d9f5e74aa47"
+    },
+    "module02": {
+      "source": "docs/demos/module02",
+      "commit": "8b21c519b26fe9e91d4fd1d7c2befaf3e0314aac"
+    },
+    "module03": {
+      "source": "docs/demos/module03",
+      "commit": "0bdc818c8d76d30aa8c9817d7dfbcfcd44ada22b"
+    }
+  },
+  "merge_policy": "Reviewed module01 supersedes initial demo; preserve module02 and module03 behavior."
+}

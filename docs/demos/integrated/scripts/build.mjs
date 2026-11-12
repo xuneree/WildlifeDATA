@@ -1,0 +1,4 @@
+import {spawnSync} from 'node:child_process';import {readFile,writeFile} from 'node:fs/promises';import path from 'node:path';
+const root=process.cwd();function run(args,cwd=root){const r=spawnSync(args[0],args.slice(1),{cwd,stdio:'inherit'});if(r.status!==0)process.exit(r.status||1);}
+run(['node',path.join(root,'node_modules/vite/bin/vite.js'),'build']);
+for(const name of ['module01','module02','module03']){const target=path.join(root,'dist/modules',name);run(['npm','run','build','--','--base=./',`--outDir=${target}`,'--emptyOutDir'],path.join(root,'modules',name));const file=path.join(target,'index.html'),html=await readFile(file,'utf8');await writeFile(file,html.replace('</head>','<link rel="stylesheet" href="../../embedded.css"></head>'));}console.log('Built one workspace with three complete modules.');

@@ -1,0 +1,2 @@
+/* The integrated entry supplies the common workspace chrome. */
+.app-sider,.app-header,.workspace-sider,.workspace-header,.sider-bottom{display:none!important}.main-layout,.workspace-layout>.ant-layout{margin-left:0!important;min-width:0!important}.app-layout,.workspace-layout{min-width:0!important}.workspace-content{max-width:1800px!important}.app-content{min-width:0}.app-content>.monitoring-list{max-width:1744px;margin-inline:auto}

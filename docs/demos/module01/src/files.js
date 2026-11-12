@@ -1,0 +1,4 @@
+const DB='wildlifedata-module01-files';
+function database(){return new Promise((resolve,reject)=>{const request=indexedDB.open(DB,1);request.onupgradeneeded=()=>request.result.createObjectStore('locations');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
+export async function saveLocationFiles(id,files){const db=await database();try{await new Promise((resolve,reject)=>{const tx=db.transaction('locations','readwrite');tx.objectStore('locations').put(files,id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}finally{db.close();}}
+export async function loadLocationFiles(id){const db=await database();try{return await new Promise((resolve,reject)=>{const request=db.transaction('locations').objectStore('locations').get(id);request.onsuccess=()=>resolve(request.result||{});request.onerror=()=>reject(request.error);});}finally{db.close();}}
