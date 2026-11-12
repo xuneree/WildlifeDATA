@@ -49,3 +49,5 @@
 - [国际化](https://ant.design/docs/react/i18n-cn/) · [v6 迁移与兼容性](https://ant.design/docs/react/migration-v6-cn/)
 
 本文记录项目使用规则；组件的最新属性和限制以匹配安装版本的官方文档为准。
+
+列表的文字分级、密度与查看/编辑、筛选、分页、勾选交互遵循[列表视觉与交互规范](list-ui-guidelines.md)。
