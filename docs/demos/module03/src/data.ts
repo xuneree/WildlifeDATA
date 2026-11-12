@@ -1,3 +1,5 @@
+import {matchesSiteContext} from './locations.ts';
+import type {SiteDirectory,SiteContextFilters} from './locations.ts';
 export const sourceFields = [
  ['folder','文件夹'],['file','文件名'],['camera','相机编号'],['site','位点'],
  ['date','拍摄日期'],['time','拍摄时间'],['quantity','视频中豹个体数量'],['position','位置描述'],
@@ -146,13 +148,13 @@ export function loadDataset(seed:RecordRow[]):Dataset{
  return {rows:seed,history:[]};
 }
 export function persistDataset(dataset:Dataset){localStorage.setItem(storageKey,JSON.stringify(dataset));}
-export type Filters={keyword?:string;individual?:string;site?:string;camera?:string;period?:string;angle?:string;sex?:string;identifiable?:string;adult?:string;observer?:string;reviewer?:string;reviewStatus?:string;confidence?:string;startDate?:string;endDate?:string;independentOnly?:boolean};
-export function filterRecords(rows:RecordRow[],f:Filters){return rows.filter(r=>{
+export type Filters=SiteContextFilters & {keyword?:string;individual?:string;site?:string;period?:string;reviewStatus?:string;startDate?:string;endDate?:string};
+export function filterRecords(rows:RecordRow[],f:Filters,directory:SiteDirectory={sites:[],projects:[]}){return rows.filter(r=>{
+ if(!matchesSiteContext(r,f,directory))return false;
  if(f.keyword&&!fields.some(([key])=>`${r[key]} ${fieldText(key,r[key])}`.toLowerCase().includes(f.keyword!.trim().toLowerCase())))return false;
- for(const key of ['individual','site','camera','period','sex','identifiable','adult','observer','reviewer','reviewStatus','confidence'] as const)if(f[key]&&r[key]!==f[key])return false;
- if(f.angle&&!r.angle.split('、').includes(f.angle))return false;
+ for(const key of ['individual','site','period','reviewStatus'] as const)if(f[key]&&r[key]!==f[key])return false;
  const date=effectiveDate(r);if(f.startDate&&date<f.startDate||f.endDate&&date>f.endDate)return false;
- return !f.independentOnly||r.independent==='1';
+ return true;
 });}
 // Explicit design projection: source observations are not new permanent profile fields.
 export function databaseProjection(row:RecordRow){

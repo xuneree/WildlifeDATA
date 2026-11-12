@@ -63,10 +63,14 @@ test('1904 日期系统、Excel 时间小数、编号前导零、原值行号',(
  const r=readExcel(XLSX.write(wb,{type:'array',bookType:'xlsx'}),[]);assert.equal(r.additions[0].site,'007');assert.equal(r.additions[0].date,'1904-01-02');assert.equal(r.additions[0].time,'12:00:00');
  const bad=validateGrid(grid([sample[0],{...sample[1],date:'2026-02-30',time:'25:00:00'}]),[]);assert(bad.issues.every(i=>i.row===3));
 });
-test('复核、观察条件与关键词组合筛选，包含多角度',()=>{
- assert.equal(filterRecords(sample,{reviewer:'CS',reviewStatus:'reviewed'}).length,36);assert.equal(filterRecords(sample,{independentOnly:true}).length,24);
- assert.equal(filterRecords(sample,{individual:'HS2405M'}).length,7);assert.equal(filterRecords(sample,{adult:'2'}).length,1);
- assert.equal(filterRecords(sample,{reviewStatus:'unreviewed'}).length,0);assert.equal(filterRecords([{...sample[0],angle:'左、正'}],{angle:'正'}).length,1);
+test('指定筛选支持位点关系、个体、批次、日期、复核与关键词组合',()=>{
+ const directory={projects:[{id:'p',name:'项目一'}],sites:[{id:'s',code:'107',region:'区域一',locality:'小地名一',projectIds:['p']}]};
+ assert.equal(filterRecords(sample,{region:'区域一',locality:'小地名一',project:'p',site:'107',period:'202606',reviewStatus:'reviewed'},directory).length,3);
+ assert.equal(filterRecords(sample,{individual:'HS2405M'}).length,7);
+ assert.equal(filterRecords(sample,{reviewStatus:'unreviewed'}).length,0);
+ assert.equal(filterRecords(sample,{region:'区域一',site:'109'},directory).length,0);
+ assert.equal(filterRecords(sample,{project:'p'},{...directory,sites:[{...directory.sites[0],projectIds:['p','p2']}]}).length,3);
+ assert.equal(filterRecords(sample,{},directory).length,36);
  assert(filterRecords(sample,{keyword:'雌性'}).length>0);
 });
 test('旧缓存不污染新样例、不删除旧缓存；保存失败抛错',()=>{

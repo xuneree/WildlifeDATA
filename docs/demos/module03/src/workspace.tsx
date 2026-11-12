@@ -1,10 +1,12 @@
 import React, {useMemo, useRef, useState} from 'react';
-import {Alert,App,Breadcrumb,Button,Card,Checkbox,Col,Collapse,DatePicker,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
+import {Alert,App,Breadcrumb,Button,Card,Col,DatePicker,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
 import type {TableColumnsType} from 'antd';
 import {CameraOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
 import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import sample from './sample.json';
+import siteDirectory from './site-context.json';
+import {siteContextOptions,siteForRecord} from './locations';
 import {fields,loadDataset,persistDataset,storageKey,uniqueValues,validateGrid,filterRecords,fieldText,effectiveDate,individualLabel} from './data';
 import type {Dataset,ImportBatch,ImportIssue,ImportPreview,RecordRow,DataField,Filters as DataFilters} from './data';
 const {Header,Sider,Content}=Layout;
@@ -16,23 +18,19 @@ type Dialog='import'|'export'|'history'|null;
 export function IndividualWorkspace(){
  const {token}=theme.useToken();const {message,notification}=App.useApp();const screens=Grid.useBreakpoint();
  const [dataset,setDataset]=useState<Dataset>(()=>loadDataset(seed));const {history,rows}=dataset;
- const [independentOnly,setIndependentOnly]=useState(false);
  const [collapsed,setCollapsed]=useState(false),[navOpen,setNavOpen]=useState(false);
  const [form]=Form.useForm<Filters>();const [filters,setFilters]=useState<Filters>({});
- const [statIndividual,setStatIndividual]=useState<string>();
  const [page,setPage]=useState(1),[pageSize,setPageSize]=useState(10),[selection,setSelection]=useState<React.Key[]>([]);
  const [detail,setDetail]=useState<RecordRow|null>(null),[dialog,setDialog]=useState<Dialog>(null);
  const [step,setStep]=useState(0),[filename,setFilename]=useState(''),[preview,setPreview]=useState<ImportPreview|null>(null),[importError,setImportError]=useState('');
  const [reading,setReading]=useState(false),[saving,setSaving]=useState(false),[exporting,setExporting]=useState(false),[exportScope,setExportScope]=useState('filtered');
  const readGeneration=useRef(0),importLock=useRef(false);const tableRef=useRef<HTMLDivElement>(null);
- const baseRows=useMemo(()=>filterRecords(rows,{...filters,independentOnly,startDate:filters.dates?.[0]?.format('YYYY-MM-DD'),endDate:filters.dates?.[1]?.format('YYYY-MM-DD')}),[rows,filters,independentOnly]);
- const filtered=useMemo(()=>statIndividual?baseRows.filter(r=>individualLabel(r)===statIndividual):baseRows,[baseRows,statIndividual]);
- const labelCounts=useMemo(()=>{const counts=new Map<string,number>();for(const r of baseRows){const label=individualLabel(r);counts.set(label,(counts.get(label)||0)+1);}return [...counts].map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label));},[baseRows]);
- function toggleStatLabel(label:string){setStatIndividual(current=>current===label?undefined:label);setPage(1);}
- function clearStatLabel(){setStatIndividual(undefined);setPage(1);}
- const activeFilters=Object.values(filters).filter(v=>v!=null&&v!=='').length+(statIndividual?1:0)+(independentOnly?1:0);
+ const filtered=useMemo(()=>filterRecords(rows,{...filters,startDate:filters.dates?.[0]?.format('YYYY-MM-DD'),endDate:filters.dates?.[1]?.format('YYYY-MM-DD')},siteDirectory),[rows,filters]);
+ const contextOptions=useMemo(()=>siteContextOptions(rows,siteDirectory),[rows]);
+ const detailSite=detail?siteForRecord(detail,siteDirectory):undefined;
+ const activeFilters=Object.values(filters).filter(v=>v!=null&&v!=='').length;
  const exportRows=exportScope==='all'?rows:exportScope==='selected'?rows.filter(r=>selection.includes(r.id)):filtered;
- function resetFilters(){form.resetFields();setFilters({});setIndependentOnly(false);setStatIndividual(undefined);setPage(1);}
+ function resetFilters(){form.resetFields();setFilters({});setPage(1);}
  function openImport(){readGeneration.current++;setFilename('');setPreview(null);setImportError('');setStep(0);setReading(false);setDialog('import');}
  function closeDialog(){if(!reading&&!saving&&!exporting){readGeneration.current++;setDialog(null);}}
  async function download(records:RecordRow[],name:string){setExporting(true);try{const {downloadExcel}=await import('./excel');downloadExcel(records,name);void message.success(`已生成 Excel，共 ${records.length} 条记录`);return true;}catch{void message.error('文件生成失败，请重试。');return false;}finally{setExporting(false);}}
@@ -67,23 +65,21 @@ export function IndividualWorkspace(){
    <Content className="workspace-content">
     <Flex justify="space-between" align="center" wrap gap={16} className="workspace-title"><div><Title level={3} style={{margin:0}}>个体识别</Title></div><Space><Button aria-label="下载数据" icon={<DownloadOutlined/>} onClick={()=>{setExportScope('filtered');setDialog('export');}}>下载数据</Button><Button type="primary" aria-label="导入 Excel" icon={<UploadOutlined/>} onClick={openImport}>导入 Excel</Button></Space></Flex>
     <Card title="筛选条件" size="small" extra={<Button type="link" size="small" disabled={!activeFilters} onClick={resetFilters}>重置筛选</Button>}>
-     <Form form={form} layout="vertical" onValuesChange={(_,all:Filters)=>{setFilters(all);setStatIndividual(undefined);setPage(1);}}>
+     <Form form={form} layout="vertical" onValuesChange={(_,all:Filters)=>{setFilters(all);setPage(1);}}>
       <div className="filter-layout">
-<Form.Item className="filter-individual" style={{marginBottom:token.marginXS}} label="个体编号" name="individual"><Select aria-label="个体编号" allowClear showSearch placeholder="全部个体" options={filterOptions('individual')}/></Form.Item>
+<Form.Item className="filter-region" style={{marginBottom:token.marginXS}} label="区域" name="region"><Select aria-label="区域" allowClear showSearch placeholder="全部区域" options={contextOptions.regions}/></Form.Item>
+<Form.Item className="filter-locality" style={{marginBottom:token.marginXS}} label="小地名" name="locality"><Select aria-label="小地名" allowClear showSearch placeholder="全部小地名" options={contextOptions.localities}/></Form.Item>
+<Form.Item className="filter-project" style={{marginBottom:token.marginXS}} label="项目" name="project"><Select aria-label="项目" allowClear showSearch placeholder="全部项目" options={contextOptions.projects}/></Form.Item>
 <Form.Item className="filter-site" style={{marginBottom:token.marginXS}} label="位点" name="site"><Select aria-label="位点" allowClear showSearch placeholder="全部位点" options={filterOptions('site')}/></Form.Item>
-<Form.Item className="filter-camera" style={{marginBottom:token.marginXS}} label="相机编号" name="camera"><Select aria-label="相机编号" allowClear showSearch placeholder="全部相机" options={filterOptions('camera')}/></Form.Item>
 <Form.Item className="filter-period" style={{marginBottom:token.marginXS}} label="回收批次" name="period"><Select aria-label="回收批次" allowClear showSearch placeholder="全部批次" options={filterOptions('period')}/></Form.Item>
-<Form.Item className="filter-dates" style={{marginBottom:token.marginXS}} label="拍摄时间" tooltip="日期优先采用校正后拍摄日期；缺少校正日期时采用原始日期。时刻保留原值。" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item>
+<Form.Item className="filter-dates" style={{marginBottom:token.marginXS}} label="拍摄时间" tooltip="日期优先采用校正后拍摄日期；时刻保留原值。" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item>
 <Form.Item className="filter-keyword" style={{marginBottom:token.marginXS}} label="关键词" name="keyword"><Input aria-label="关键词" allowClear prefix={<SearchOutlined/>} placeholder="文件名、个体编号、行为、备注…"/></Form.Item>
-<Form.Item className="filter-observer" style={{marginBottom:token.marginXS}} label="识别人" name="observer"><Select aria-label="识别人" allowClear showSearch placeholder="全部识别人" options={filterOptions('observer')}/></Form.Item>
-<Form.Item className="filter-reviewer" style={{marginBottom:token.marginXS}} label="复核人" name="reviewer"><Select aria-label="复核人" allowClear showSearch placeholder="全部复核人" options={filterOptions('reviewer')}/></Form.Item>
+<Form.Item className="filter-individual" style={{marginBottom:token.marginXS}} label="个体编号" name="individual"><Select aria-label="个体编号" allowClear showSearch placeholder="全部个体" options={filterOptions('individual')}/></Form.Item>
 <Form.Item className="filter-reviewStatus" style={{marginBottom:token.marginXS}} label="复核状态" name="reviewStatus"><Select aria-label="复核状态" allowClear placeholder="全部状态" options={[{value:'reviewed',label:'已复核'},{value:'unreviewed',label:'未复核'}]}/></Form.Item>
       </div>
-      <Collapse ghost size="small" items={[{key:'observation',label:'更多筛选',children:<div className="observation-filters">{([['identifiable','可识别性'],['adult','是否成年'],['angle','角度'],['sex','性别'],['confidence','确信度']] as [DataField,string][]).map(([key,label])=><Form.Item key={key} name={key} label={label} style={{marginBottom:token.marginXS}}><Select aria-label={label} allowClear placeholder="全部" options={key==='angle'?['左','右','正','背'].map(value=>({value,label:fieldText(key,value)})):filterOptions(key)}/></Form.Item>)}</div>}]}/>
      </Form>
     </Card>
-    <div ref={tableRef} className="workspace-table-section" style={{marginTop:token.marginSM}}><Card size="small" title={<Space size={6}>识别记录<Text type="secondary">{filtered.length} 条</Text></Space>} extra={<Space wrap><Button type="text" size="small" aria-label="导入记录" icon={<HistoryOutlined/>} onClick={()=>setDialog('history')}>{screens.md?'导入记录':null}</Button><Checkbox checked={independentOnly} onChange={event=>{setIndependentOnly(event.target.checked);clearStatLabel();}}>仅个体独立拍摄</Checkbox></Space>}>
-     {labelCounts.length>0&&<Flex wrap gap={8} aria-label="个体编号筛选" className="record-label-filters" style={{marginBottom:token.marginSM}}>{labelCounts.map(item=><Button key={item.label} size="small" type={statIndividual===item.label?'primary':'default'} aria-pressed={statIndividual===item.label} aria-label={`筛选个体编号 ${item.label}，${item.count}`} onClick={()=>toggleStatLabel(item.label)}>{item.label}<span style={{opacity:.75}}>{item.count}</span></Button>)}{statIndividual&&<Button type="link" size="small" aria-label="清除标签筛选" onClick={clearStatLabel}>清除</Button>}</Flex>}
+    <div ref={tableRef} className="workspace-table-section" style={{marginTop:token.marginSM}}><Card size="small" title={<Space size={6}>识别记录<Text type="secondary">{filtered.length} 条</Text></Space>} extra={<Button type="text" size="small" aria-label="导入记录" icon={<HistoryOutlined/>} onClick={()=>setDialog('history')}>{screens.md?'导入记录':null}</Button>}>
      {selection.length>0&&<Alert type="info" showIcon title={<Flex align="center" justify="space-between" wrap gap={8}><span>已选择 {selection.length} 条记录</span><Space><Button type="link" size="small" onClick={()=>setSelection([])}>取消选择</Button><Button size="small" aria-label="下载已选" icon={<DownloadOutlined/>} onClick={()=>{setExportScope('selected');setDialog('export');}}>下载已选</Button></Space></Flex>} style={{marginBottom:token.margin}}/>}
      <Table<RecordRow> rowKey="id" columns={columns} dataSource={filtered} size="small" scroll={{x:1140}} rowSelection={{selectedRowKeys:selection,onChange:setSelection,preserveSelectedRowKeys:true}} pagination={{current:page,pageSize,total:filtered.length,showSizeChanger:true,pageSizeOptions:[10,20,50],showTotal:(total,range)=>total?`共 ${total} 条，显示 ${range[0]}–${range[1]} 条`:'共 0 条',onChange:(next,size)=>{setPage(size!==pageSize?1:next);setPageSize(size);}}} locale={{emptyText:<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={activeFilters?'没有符合条件的记录':'暂无识别记录'}>{activeFilters?<Button onClick={resetFilters}>重置筛选</Button>:<Button type="primary" onClick={openImport}>导入 Excel</Button>}</Empty>}}/>
     </Card></div>
@@ -91,7 +87,7 @@ export function IndividualWorkspace(){
   </Layout>
   <Drawer title="数据管理" open={navOpen&&!screens.md} placement="left" size={240} onClose={()=>setNavOpen(false)}>{navigation}</Drawer>
   <Drawer title="识别记录详情" open={!!detail} size={screens.md?600:'100%'} onClose={()=>setDetail(null)} focusable={{trap:true,focusTriggerAfterClose:true}} extra={<Button aria-label="下载此记录" icon={<DownloadOutlined/>} loading={exporting} onClick={()=>detail&&void download([detail],'个体识别_单条记录.xlsx')}>下载此记录</Button>}>
-   {detail&&<Flex vertical gap={24}>{detailGroups.map(([title,keys])=><section key={title}><Title level={5}>{title}</Title><Descriptions column={1} bordered size="small" items={keys.map(key=>({key,label:fields.find(f=>f[0]===key)![1],children:detailValue(key,detail)}))}/></section>)}</Flex>}
+   {detail&&<Flex vertical gap={24}><Descriptions column={1} bordered size="small" items={[{key:'region',label:'区域',children:detailSite?.region||'未关联'},{key:'locality',label:'小地名',children:detailSite?.locality||'未关联'},{key:'project',label:'项目',children:detailSite?siteDirectory.projects.filter(p=>detailSite.projectIds.includes(p.id)).map(p=>p.name).join('、')||'未关联':'未关联'}]}/>{detailGroups.map(([title,keys])=><section key={title}><Title level={5}>{title}</Title><Descriptions column={1} bordered size="small" items={keys.map(key=>({key,label:fields.find(f=>f[0]===key)![1],children:detailValue(key,detail)}))}/></section>)}</Flex>}
 
   </Drawer>
   <Modal title="导入个体识别数据" open={dialog==='import'} width={screens.md?820:'100%'} onCancel={closeDialog} closable={!reading&&!saving} keyboard={!reading&&!saving} mask={{closable:false}} focusable={{trap:true,focusTriggerAfterClose:true}} destroyOnHidden footer={importFooter}>
