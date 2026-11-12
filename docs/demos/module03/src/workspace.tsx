@@ -1,6 +1,6 @@
 import React, {useMemo, useRef, useState} from 'react';
 import {Alert,App,Breadcrumb,Button,Card,Col,DatePicker,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
-import type {TableColumnsType} from 'antd';
+import type {TableColumnsType,DescriptionsProps} from 'antd';
 import {CameraOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
 import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
@@ -14,6 +14,8 @@ const {Text,Title}=Typography;
 const seed:RecordRow[]=sample.map((r,i)=>({...r,id:`sample-202606-${i}`}));
 type Filters=DataFilters & {dates?:[Dayjs,Dayjs]|null};
 type Dialog='import'|'export'|'history'|null;
+const detailDescriptionStyles:DescriptionsProps['styles']={label:{width:'32%',overflowWrap:'anywhere'},content:{width:'68%',overflowWrap:'anywhere'}};
+const detailDescriptionClasses={label:'record-detail-label',content:'record-detail-content'};
 
 export function IndividualWorkspace(){
  const {token}=theme.useToken();const {message,notification}=App.useApp();const screens=Grid.useBreakpoint();
@@ -39,7 +41,7 @@ export function IndividualWorkspace(){
  const independentTag=(r:RecordRow)=><Text type="secondary">{fieldText('independent',r.independent)}</Text>;
  const reviewTag=(r:RecordRow)=><Tag color={r.reviewStatus==='reviewed'?'success':'default'}>{fieldText('reviewStatus',r.reviewStatus)}</Tag>;
  const detailValue=(key:DataField,row:RecordRow)=>key==='reviewStatus'?reviewTag(row):key==='independent'?independentTag(row):key==='folder'?<Text copyable style={{wordBreak:'break-all'}}>{row.folder}</Text>:<Tooltip title={fieldText(key,row[key])!==row[key]&&row[key]?`原值：${row[key]}`:undefined}><span style={{wordBreak:'break-all'}}>{fieldText(key,row[key])}</span></Tooltip>;
- const detailGroups:[string,DataField[]][]=[['个体出现与复核',['individual','observer','reviewStatus','reviewer','reviewNotes']],['媒体信息',['file','folder','site','camera','period','date','time','quantity']],['识别观察',['identifiable','angle','adult','sex','position','injury','multiBehavior','reproduction','behavior','confidence','notes','independent']],['时间校正与来源',['dateSuspect','correctedDate','previousTime']]];
+ const detailGroups:[string,DataField[]][]=[['个体出现与复核',['individual','observer','reviewStatus','reviewer','reviewNotes']],['媒体信息',['file','folder','period','date','time','quantity']],['识别观察',['identifiable','angle','adult','sex','position','injury','multiBehavior','reproduction','behavior','confidence','notes','independent']],['时间校正与来源',['dateSuspect','correctedDate','previousTime']]];
 
  const columns:TableColumnsType<RecordRow>=[
   {title:'文件名',dataIndex:'file',key:'file',width:240,render:(value,r)=><Tooltip title={value}><Button type="link" onClick={()=>setDetail(r)} style={{padding:0,maxWidth:'100%',textAlign:'left'}}><FileTextOutlined/><span className="filename-text">{value}</span></Button></Tooltip>},
@@ -87,7 +89,8 @@ export function IndividualWorkspace(){
   </Layout>
   <Drawer title="数据管理" open={navOpen&&!screens.md} placement="left" size={240} onClose={()=>setNavOpen(false)}>{navigation}</Drawer>
   <Drawer title="识别记录详情" open={!!detail} size={screens.md?600:'100%'} onClose={()=>setDetail(null)} focusable={{trap:true,focusTriggerAfterClose:true}} extra={<Button aria-label="下载此记录" icon={<DownloadOutlined/>} loading={exporting} onClick={()=>detail&&void download([detail],'个体识别_单条记录.xlsx')}>下载此记录</Button>}>
-   {detail&&<Flex vertical gap={24}><Descriptions column={1} bordered size="small" items={[{key:'region',label:'区域',children:detailSite?.region||'未关联'},{key:'locality',label:'小地名',children:detailSite?.locality||'未关联'},{key:'project',label:'项目',children:detailSite?siteDirectory.projects.filter(p=>detailSite.projectIds.includes(p.id)).map(p=>p.name).join('、')||'未关联':'未关联'}]}/>{detailGroups.map(([title,keys])=><section key={title}><Title level={5}>{title}</Title><Descriptions column={1} bordered size="small" items={keys.map(key=>({key,label:fields.find(f=>f[0]===key)![1],children:detailValue(key,detail)}))}/></section>)}</Flex>}
+   {detail&&<Flex vertical gap={24}><section><Title level={5}>位点信息</Title><Descriptions column={1} bordered size="small" styles={detailDescriptionStyles} classNames={detailDescriptionClasses} items={[{key:'region',label:'区域',children:detailSite?.region||'未关联'},{key:'locality',label:'小地名',children:detailSite?.locality||'未关联'},{key:'project',label:'项目',children:detailSite?siteDirectory.projects.filter(p=>detailSite.projectIds.includes(p.id)).map(p=>p.name).join('、')||'未关联':'未关联'},{key:'site',label:'位点',children:detail.site},{key:'camera',label:'相机编号',children:detail.camera}]}/></section>{detailGroups.map(([title,keys])=><section key={title}><Title level={5}>{title}</Title><Descriptions column={1} bordered size="small" styles={detailDescriptionStyles} classNames={detailDescriptionClasses} items={keys.map(key=>({key,label:fields.find(f=>f[0]===key)![1],children:detailValue(key,detail)}))}/></section>)}</Flex>}
+
 
   </Drawer>
   <Modal title="导入个体识别数据" open={dialog==='import'} width={screens.md?820:'100%'} onCancel={closeDialog} closable={!reading&&!saving} keyboard={!reading&&!saving} mask={{closable:false}} focusable={{trap:true,focusTriggerAfterClose:true}} destroyOnHidden footer={importFooter}>
