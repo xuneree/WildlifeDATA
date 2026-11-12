@@ -11,6 +11,8 @@ export type ImportBatch = { id: string; name: string; count: number; skipped: nu
 export type Dataset = { rows: RecordRow[]; history: ImportBatch[] };
 export const storageKey = 'wildlifedata-module02-demo-v1';
 export const recordKey = (r: Pick<RecordRow, 'folder' | 'file' | 'species'>) => JSON.stringify([r.folder, r.file, r.species]);
+// Excel import contract: 1 is independent; 0 and blank are non-independent.
+export const isIndependentCapture = (value: string) => value === '1';
 export const sameRecord = (a: RecordRow, b: RecordRow) => fields.every(([key]) => a[key] === b[key]);
 export const uniqueValues = (rows: RecordRow[], field: DataField) => [...new Set(rows.map(r => r[field]))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 export function validDate(value: string) {

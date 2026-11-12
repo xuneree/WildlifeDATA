@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as XLSX from 'xlsx';
-import { fields, validateGrid, dateText, timeText, sameRecord } from '../src/data.ts';
+import { fields, isIndependentCapture, validateGrid, dateText, timeText, sameRecord } from '../src/data.ts';
 import { readExcel, makeWorkbook } from '../src/excel.ts';
 const sample=JSON.parse(fs.readFileSync(new URL('../src/sample.json',import.meta.url)));
 const seed=sample.map((r,i)=>({...r,id:`sample-${i}`}));
@@ -18,3 +18,5 @@ test('missing or duplicate headers reject; reordered columns and blank rows are 
 test('Excel date systems, fractions and impossible leap dates keep date/time precision',()=>{assert.equal(dateText(46214),'2026-07-11');assert.equal(dateText(0,true),'1904-01-01');assert.equal(dateText(1),'1900-01-01');assert.equal(timeText(.5),'12:00:00');assert.equal(timeText('1:02'),'01:02:00');const values=grid([newRow]);values[1][4]=46214;values[1][5]=.5;const result=validateGrid(values,seed,labels);assert.equal(result.additions[0].date,'2026-07-11');assert.equal(result.additions[0].time,'12:00:00');values[1][4]=60;assert.ok(validateGrid(values,seed,labels).issues.some(i=>i.field==='拍摄日期'));});
 test('explicitly zero-padded Excel number identifiers remain strings with leading zeros',()=>{const book=makeWorkbook([newRow]);const sheet=book.Sheets[book.SheetNames[0]];sheet.C2={t:'n',v:1,z:'000'};const result=parse(book);assert.equal(result.additions[0].site,'001');assert.equal(result.additions[0].camera,'001A');});
 test('download has exact nine-column header, no invented rows, and preserves 0 versus blank',()=>{const book=makeWorkbook([{...newRow,independent:'0'}, {...newRow,independent:''}]);const data=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});assert.deepEqual(data[0],header);assert.equal(data[1][8],0);assert.equal(data[2][8],'');assert.equal(data[1][2],'001');const template=makeWorkbook([]);assert.equal(XLSX.utils.sheet_to_json(template.Sheets[template.SheetNames[0]],{header:1}).length,1);});
+
+test('Excel blanks and explicit zero are both non-independent without rewriting source values',()=>{const result=parse(makeWorkbook([...seed,{...newRow,independent:'0'}]));assert.equal(result.issues.length,0);assert.equal(result.additions.filter(r=>!isIndependentCapture(r.independent)).length,68);assert.equal(result.additions.filter(r=>isIndependentCapture(r.independent)).length,133);assert.equal(result.additions.filter(r=>r.independent==='').length,67);assert.equal(isIndependentCapture('0'),false);assert.equal(isIndependentCapture(''),false);});
