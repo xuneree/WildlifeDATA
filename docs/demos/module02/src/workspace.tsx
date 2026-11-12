@@ -1,7 +1,7 @@
 import React, {useMemo, useRef, useState} from 'react';
-import {Alert,App,Breadcrumb,Button,Card,Checkbox,Col,DatePicker,Divider,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
+import {Alert,App,Breadcrumb,Button,Card,Checkbox,Col,DatePicker,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
 import type {TableColumnsType} from 'antd';
-import {CameraOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
+import {CameraOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,SettingOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
 import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import sample from './sample.json';
@@ -68,60 +68,50 @@ export function SpeciesWorkspace(){
   <Layout style={{marginLeft:screens.md?collapsed?72:208:0,minWidth:0}}>
    <Header className="workspace-header"><Button type="text" aria-label="切换导航" icon={collapsed||!screens.md?<MenuUnfoldOutlined/>:<MenuFoldOutlined/>} onClick={()=>screens.md?setCollapsed(v=>!v):setNavOpen(v=>!v)}/><Breadcrumb items={[{title:'监测管理'},{title:'物种识别'}]}/></Header>
    <Content className="workspace-content">
-    <Flex justify="space-between" align="center" wrap gap={16} className="workspace-title"><div><Title level={3} style={{margin:0}}>物种识别</Title><Text type="secondary">管理物种识别记录，支持 Excel 导入、查询和下载。</Text></div><Space><Button aria-label="下载数据" icon={<DownloadOutlined/>} onClick={()=>{setExportScope('filtered');setDialog('export');}}>下载数据</Button><Button type="primary" aria-label="导入 Excel" icon={<UploadOutlined/>} onClick={openImport}>导入 Excel</Button></Space></Flex>
+    <Flex justify="space-between" align="center" wrap gap={16} className="workspace-title"><div><Title level={3} style={{margin:0}}>物种识别</Title></div><Space><Button aria-label="下载数据" icon={<DownloadOutlined/>} onClick={()=>{setExportScope('filtered');setDialog('export');}}>下载数据</Button><Button type="primary" aria-label="导入 Excel" icon={<UploadOutlined/>} onClick={openImport}>导入 Excel</Button></Space></Flex>
     <Card title="筛选条件" size="small" extra={<Button type="link" size="small" disabled={!activeFilters} onClick={resetFilters}>重置筛选</Button>}>
      <Form form={form} layout="vertical" onValuesChange={(_,all:Filters)=>{setFilters(all);setStatSpecies(undefined);setPage(1);}}>
       <div className="filter-layout">
        <section className="filter-group filter-geography" aria-label="区域与项目筛选">
-        <Text type="secondary" className="filter-group-title">区域与项目</Text>
         <div className="filter-fields filter-three">
-         <Form.Item label="区域" name="region"><Select aria-label="区域" allowClear showSearch placeholder="全部区域" options={contextOptions.regions}/></Form.Item>
-         <Form.Item label="小地名" name="locality"><Select aria-label="小地名" allowClear showSearch placeholder="全部小地名" options={contextOptions.localities}/></Form.Item>
-         <Form.Item label="项目" name="project"><Select aria-label="项目" allowClear showSearch placeholder="全部项目" options={contextOptions.projects}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="区域" name="region"><Select aria-label="区域" allowClear showSearch placeholder="全部区域" options={contextOptions.regions}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="小地名" name="locality"><Select aria-label="小地名" allowClear showSearch placeholder="全部小地名" options={contextOptions.localities}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="项目" name="project"><Select aria-label="项目" allowClear showSearch placeholder="全部项目" options={contextOptions.projects}/></Form.Item>
         </div>
        </section>
        <section className="filter-group filter-devices" aria-label="位点与相机筛选">
-        <Text type="secondary" className="filter-group-title">位点与相机</Text>
         <div className="filter-fields filter-two">
-         <Form.Item label="位点" name="site"><Select aria-label="位点" allowClear showSearch placeholder="全部位点" options={filterOptions('site')}/></Form.Item>
-         <Form.Item label="相机编号" name="camera"><Select aria-label="相机编号" allowClear showSearch placeholder="全部相机" options={filterOptions('camera')}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="位点" name="site"><Select aria-label="位点" allowClear showSearch placeholder="全部位点" options={filterOptions('site')}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="相机编号" name="camera"><Select aria-label="相机编号" allowClear showSearch placeholder="全部相机" options={filterOptions('camera')}/></Form.Item>
         </div>
        </section>
        <section className="filter-group filter-content" aria-label="关键词与物种标签筛选">
-        <Text type="secondary" className="filter-group-title">关键词与物种标签</Text>
         <div className="filter-fields filter-two">
-         <Form.Item label="关键词" name="keyword"><Input aria-label="关键词" allowClear prefix={<SearchOutlined/>} placeholder="文件名、物种标签、位点…"/></Form.Item>
-         <Form.Item label="物种标签" name="species"><Select aria-label="物种标签" allowClear showSearch placeholder="全部标签" options={filterOptions('species')}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="关键词" name="keyword"><Input aria-label="关键词" allowClear prefix={<SearchOutlined/>} placeholder="文件名、物种标签、位点…"/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="物种标签" name="species"><Select aria-label="物种标签" allowClear showSearch placeholder="全部标签" options={filterOptions('species')}/></Form.Item>
         </div>
        </section>
        <section className="filter-group filter-capture" aria-label="批次与拍摄时间筛选">
-        <Text type="secondary" className="filter-group-title">批次与拍摄时间</Text>
         <div className="filter-fields filter-time">
-         <Form.Item label="回收批次" name="period"><Select aria-label="回收批次" allowClear placeholder="全部批次" options={filterOptions('period')}/></Form.Item>
-         <Form.Item label="拍摄时间" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="回收批次" name="period"><Select aria-label="回收批次" allowClear placeholder="全部批次" options={filterOptions('period')}/></Form.Item>
+         <Form.Item style={{marginBottom:token.marginXS}} label="拍摄时间" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item>
         </div>
        </section>
        <section className="filter-group filter-independent" aria-label="独立拍摄筛选">
-        <Text type="secondary" className="filter-group-title">拍摄选项</Text>
-        <Form.Item name="independent" valuePropName="checked"><Checkbox>仅独立拍摄</Checkbox></Form.Item>
+        <Form.Item style={{marginBottom:token.marginXS}} name="independent" valuePropName="checked"><Checkbox>仅独立拍摄</Checkbox></Form.Item>
        </section>
       </div>
      </Form>
     </Card>
-    <section className="workspace-statistics" aria-label="数据统计" style={{marginBlock:token.margin}}>
-     <Card title="数据统计" size="small" extra={statSpecies?<Space wrap><Tag color="blue">物种标签：{statSpecies}</Tag><Button size="small" type="link" onClick={clearStatLabel}>清除标签筛选</Button></Space>:<Text type="secondary">当前筛选结果</Text>}>
-      <Row gutter={[16,16]}>{[
-       {title:'识别记录数',value:summary.records,unit:'条'},
-       {title:'独立拍摄数',value:summary.independent,unit:'条'},
-       {title:'位点数',value:summary.sites,unit:'个'},
-       {title:'物种标签数',value:summary.labels,unit:'类'},
-      ].map(item=><Col xs={12} md={6} key={item.title}><Statistic title={item.title} value={item.value} suffix={<Text type="secondary" style={{fontSize:token.fontSizeSM}}>{item.unit}</Text>} styles={{content:{fontSize:token.fontSizeXL,fontWeight:500}}}/></Col>)}</Row>
-      <Divider style={{marginBlock:token.margin}}/>
-      <Flex justify="space-between" align="center" wrap gap={8} style={{marginBottom:token.marginSM}}><Text>物种标签分布</Text><Text type="secondary" style={{fontSize:token.fontSizeSM}}>{statSpecies?'数量为进一步筛选前的分布，可切换标签':'点击标签进一步筛选记录'}</Text></Flex>
-      {labelCounts.length?<Flex wrap gap={8} aria-label="物种标签数量">{labelCounts.map(item=><Button key={item.label} size="small" type={statSpecies===item.label?'primary':'default'} aria-pressed={statSpecies===item.label} aria-label={`筛选物种标签 ${item.label}，${item.count} 条`} onClick={()=>toggleStatLabel(item.label)}>{item.label}<span style={{opacity:.75}}>{item.count} 条</span></Button>)}</Flex>:<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="当前筛选范围暂无标签统计"/>}
+    <section className="workspace-statistics" aria-label="数据统计" style={{marginBlock:token.marginSM}}>
+     <Card size="small">
+      <div className="statistics-label-row">
+       <Flex align="center" gap={4} className="statistics-label-heading"><Tooltip title="数量基于上方筛选条件；点击标签可进一步筛选记录，再次点击取消"><Text type="secondary">物种标签（{labelCounts.length}）</Text></Tooltip>{statSpecies&&<Button type="link" size="small" aria-label="清除标签筛选" onClick={clearStatLabel}>清除</Button>}</Flex>
+       {labelCounts.length?<Flex wrap gap={8} aria-label="物种标签数量" className="statistics-label-list">{labelCounts.map(item=><Button key={item.label} size="small" type={statSpecies===item.label?'primary':'default'} aria-pressed={statSpecies===item.label} aria-label={`筛选物种标签 ${item.label}，${item.count}`} onClick={()=>toggleStatLabel(item.label)}>{item.label}<span style={{opacity:.75}}>{item.count}</span></Button>)}</Flex>:<Text type="secondary">暂无数据</Text>}
+      </div>
      </Card>
     </section>
-    <div ref={tableRef} className="workspace-table-section"><Card size="small" title={<Space>识别记录<Text type="secondary">{filtered.length} 条</Text></Space>} extra={<Space wrap><Button type="text" size="small" aria-label="导入记录" icon={<HistoryOutlined/>} onClick={()=>setDialog('history')}>导入记录</Button><Button type="text" size="small" onClick={()=>setShowFolder(v=>!v)}>{showFolder?'隐藏文件夹':'显示文件夹'}</Button></Space>}>
+    <div ref={tableRef} className="workspace-table-section"><Card size="small" title={<Space size={12}><Space size={6}>识别记录<Text type="secondary">{summary.records} 条</Text></Space><Text type="secondary">位点 {summary.sites} 个</Text></Space>} extra={<Space wrap><Button type="text" size="small" aria-label="导入记录" icon={<HistoryOutlined/>} onClick={()=>setDialog('history')}>{screens.md?'导入记录':null}</Button><Button type="text" size="small" aria-label={showFolder?'隐藏文件夹':'显示文件夹'} icon={screens.md?undefined:<SettingOutlined/>} onClick={()=>setShowFolder(v=>!v)}>{!screens.md?null:showFolder?'隐藏文件夹':'显示文件夹'}</Button></Space>}>
      {selection.length>0&&<Alert type="info" showIcon title={<Flex align="center" justify="space-between" wrap gap={8}><span>已选择 {selection.length} 条记录</span><Space><Button type="link" size="small" onClick={()=>setSelection([])}>取消选择</Button><Button size="small" aria-label="下载已选" icon={<DownloadOutlined/>} onClick={()=>{setExportScope('selected');setDialog('export');}}>下载已选</Button></Space></Flex>} style={{marginBottom:token.margin}}/>}
      <Table<RecordRow> rowKey="id" columns={columns} dataSource={filtered} size="small" scroll={{x:showFolder?1480:1160}} rowSelection={{selectedRowKeys:selection,onChange:setSelection,preserveSelectedRowKeys:true}} pagination={{current:page,pageSize,total:filtered.length,showSizeChanger:true,pageSizeOptions:[10,20,50],showTotal:(total,range)=>total?`共 ${total} 条，显示 ${range[0]}–${range[1]} 条`:'共 0 条',onChange:(next,size)=>{setPage(size!==pageSize?1:next);setPageSize(size);}}} locale={{emptyText:<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={activeFilters?'没有符合条件的记录':'暂无识别记录'}>{activeFilters?<Button onClick={resetFilters}>重置筛选</Button>:<Button type="primary" onClick={openImport}>导入 Excel</Button>}</Empty>}}/>
     </Card></div>
