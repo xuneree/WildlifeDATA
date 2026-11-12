@@ -1,0 +1,29 @@
+{
+  "name": "wildlifedata-integrated-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "modules/module01",
+    "modules/module02",
+    "modules/module03"
+  ],
+  "scripts": {
+    "dev": "npm run build && vite preview --host 0.0.0.0 --port 5173",
+    "build": "node scripts/build.mjs",
+    "test": "npm run test --workspaces --if-present",
+    "test:browser": "node tests/integration.cjs",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "dependencies": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "antd": "6.7.0",
+    "@ant-design/icons": "6.3.4",
+    "jszip": "3.10.1"
+  },
+  "devDependencies": {
+    "vite": "6.4.4",
+    "playwright": "1.65.0"
+  }
+}
