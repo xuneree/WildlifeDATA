@@ -1,3 +1,5 @@
+import { defaultLabelMapping } from './label-mapping.ts';
+import type { LabelMapping } from './label-mapping.ts';
 export const fields = [
   ['folder', '文件夹'], ['file', '文件名'], ['site', '位点'],
   ['camera', '相机编号'], ['date', '拍摄日期'], ['time', '拍摄时间'],
@@ -15,18 +17,19 @@ export type ImportIssue = { id: string; row: number; field: string; value: strin
 export type ImportPreview = { additions: RecordRow[]; duplicates: number; total: number; issues: ImportIssue[] };
 export type ImportBatch = { id: string; name: string; count: number; skipped: number; time: string };
 export type Dataset = { rows: RecordRow[]; history: ImportBatch[] };
-// Explicit aliases from the uploaded workbook; avoid guessing from arbitrary text.
-const humanLabels = new Set(['工作人员', '其他人', '采药人', '伐木人', '人类干扰']);
-export const normalizeSpeciesLabel = (label: string) => humanLabels.has(label.trim()) ? '人类干扰' : label.trim();
-export function normalizeRecordLabel(row: RecordRow): RecordRow {
-  const species = normalizeSpeciesLabel(row.species);
-  return species === row.species ? row : { ...row, species, sourceSpecies: row.sourceSpecies || row.species };
+// Original labels are retained; the current mapping determines filter categories.
+export const normalizeSpeciesLabel = (label: string, mapping: LabelMapping = defaultLabelMapping) => mapping.humanInterference.includes(label.trim()) ? '人类干扰' : label.trim();
+export const sourceSpeciesLabel = (row: RecordRow) => row.sourceSpecies || row.species;
+export function normalizeRecordLabel(row: RecordRow, mapping: LabelMapping = defaultLabelMapping): RecordRow {
+  const source = sourceSpeciesLabel(row);
+  const species = normalizeSpeciesLabel(source, mapping);
+  return species === row.species ? row : { ...row, species, sourceSpecies: source };
 }
 export const storageKey = 'wildlifedata-module02-demo-v1';
-export const recordKey = (r: Pick<RecordRow, 'folder' | 'file' | 'species'>) => JSON.stringify([r.folder, r.file, normalizeSpeciesLabel(r.species)]);
+export const recordKey = (r: Pick<RecordRow, 'folder' | 'file' | 'species'>, mapping: LabelMapping = defaultLabelMapping) => JSON.stringify([r.folder, r.file, normalizeSpeciesLabel(r.species, mapping)]);
 // Excel import contract: 1 is independent; 0 and blank are non-independent.
 export const isIndependentCapture = (value: string) => value === '1';
-export const sameRecord = (a: RecordRow, b: RecordRow) => fields.every(([key]) => key === 'species' ? normalizeSpeciesLabel(a.species) === normalizeSpeciesLabel(b.species) : a[key] === b[key]);
+export const sameRecord = (a: RecordRow, b: RecordRow, mapping: LabelMapping = defaultLabelMapping) => fields.every(([key]) => key === 'species' ? normalizeSpeciesLabel(a.species, mapping) === normalizeSpeciesLabel(b.species, mapping) : a[key] === b[key]);
 export const uniqueValues = (rows: RecordRow[], field: DataField) => [...new Set(rows.map(r => r[field]))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 export function validDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
@@ -49,19 +52,19 @@ export function timeText(value: unknown): string {
   const text = String(value ?? '').trim();
   return /^\d{1,2}:\d{2}(:\d{2})?$/.test(text) ? text.split(':').concat(text.split(':').length === 2 ? ['00'] : []).map(n => n.padStart(2, '0')).join(':') : text;
 }
-export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabels: string[], date1904 = false): ImportPreview {
+export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabels: string[], date1904 = false, mapping: LabelMapping = defaultLabelMapping): ImportPreview {
   const header = normalizeHeader(grid[0] || []);
   const missing = fields.filter(([, label]) => !header.includes(label)).map(f => f[1]);
   if (missing.length) throw new Error(`缺少表头：${missing.join('、')}。请使用导入模板。`);
   if (new Set(header.filter(Boolean)).size !== header.filter(Boolean).length) throw new Error('表头名称重复（包括同一字段的新旧名称），请每个字段只保留一列。');
   const additions: RecordRow[] = [], issues: ImportIssue[] = [];
-  const seen = new Map(existing.map(r => [recordKey(r), r]));
+  const seen = new Map(existing.map(r => [recordKey(r, mapping), r]));
   let duplicates = 0, total = 0;
   for (let i = 1; i < grid.length; i++) {
     const line = grid[i];
     if (!line || line.every(v => v === '' || v == null)) continue;
     total++;
-    const row = normalizeRecordLabel(Object.fromEntries(fields.map(([key, label]) => [key, String(line[header.indexOf(label)] ?? '').trim()])) as RecordRow);
+    const row = normalizeRecordLabel(Object.fromEntries(fields.map(([key, label]) => [key, String(line[header.indexOf(label)] ?? '').trim()])) as RecordRow, mapping);
     row.date = dateText(line[header.indexOf('拍摄日期')], date1904);
     row.time = timeText(line[header.indexOf('拍摄时间')]);
     row.id = `record-${crypto.randomUUID()}`;
@@ -71,24 +74,24 @@ export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabe
     if (row.time && !/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(row.time)) addIssue('拍摄时间', row.time, '时间无效，请使用 HH:mm:ss');
     if (row.period && !/^\d{4}(0[1-9]|1[0-2])$/.test(row.period)) addIssue('回收批次', row.period, '请使用 YYYYMM');
     if (!['', '0', '1'].includes(row.independent)) addIssue('独立拍摄', row.independent, '仅支持 1、0 或空值');
-    if (row.species && !knownLabels.some(label => normalizeSpeciesLabel(label) === row.species)) addIssue('物种标签', row.species, '未识别标签，请先核对物种字典');
-    const previous = seen.get(recordKey(row));
+    if (row.species && !knownLabels.some(label => normalizeSpeciesLabel(label, mapping) === row.species)) addIssue('物种标签', row.species, '未识别标签，请先核对物种字典');
+    const previous = seen.get(recordKey(row, mapping));
     if (previous) {
-      if (sameRecord(previous, row)) duplicates++;
+      if (sameRecord(previous, row, mapping)) duplicates++;
       else addIssue('记录冲突', row.file, '相同文件路径与物种的记录内容不同，请核对；不会覆盖原记录');
-    } else { seen.set(recordKey(row), row); additions.push(row); }
+    } else { seen.set(recordKey(row, mapping), row); additions.push(row); }
   }
   if (!total) throw new Error('工作表中没有可导入的数据。');
   return { additions, duplicates, total, issues };
 }
-export function loadDataset(seed: RecordRow[]): Dataset {
+export function loadDataset(seed: RecordRow[], mapping: LabelMapping = defaultLabelMapping): Dataset {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
     if (saved && Array.isArray(saved.rows) && saved.rows.every((r: RecordRow) => typeof r.id === 'string' && fields.every(([k]) => typeof r[k] === 'string')) && Array.isArray(saved.history)) {
-      return { rows: saved.rows.map(normalizeRecordLabel), history: saved.history.map((h: ImportBatch, i: number) => ({ ...h, id: h.id || `old-${i}` })) };
+      return { rows: saved.rows.map((row: RecordRow) => normalizeRecordLabel(row, mapping)), history: saved.history.map((h: ImportBatch, i: number) => ({ ...h, id: h.id || `old-${i}` })) };
     }
   } catch { /* An unavailable or invalid cache does not discard the supplied seed. */ }
-  return { rows: seed.map(normalizeRecordLabel), history: [] };
+  return { rows: seed.map(row => normalizeRecordLabel(row, mapping)), history: [] };
 }
 export function persistDataset(dataset: Dataset) {
   // Persist once before updating UI: a storage failure must not be reported as success.

@@ -7,7 +7,7 @@ import {makeWorkbook} from '../src/excel.ts';
 import {filterRecords,refineByLabel,summarizeRecords,summarizeLabels} from '../src/statistics.ts';
 const sample=JSON.parse(fs.readFileSync(new URL('../src/sample.json',import.meta.url)));
 const raw=sample.map((row,i)=>({...row,id:`sample-${i}`}));
-const rows=raw.map(normalizeRecordLabel);
+const rows=raw.map(row=>normalizeRecordLabel(row));
 const directory=JSON.parse(fs.readFileSync(new URL('../src/site-context.json',import.meta.url)));
 const humanSources=['工作人员','其他人','采药人','伐木人'];
 test('human-related labels consolidate into one category without changing record or independent totals',()=>{
@@ -42,7 +42,7 @@ test('label drill-down narrows totals but preserves the base distribution for sw
  assert.deepEqual(summarizeRecords([]),{records:0,independent:0,sites:0,labels:0});
  assert.deepEqual(summarizeLabels([]),[]);
 });
-test('legacy cache, legacy Excel and exports use the same merged category while preserving source provenance',()=>{
+test('legacy cache and Excel use grouped filters while exports preserve concrete source labels',()=>{
  const previous=globalThis.localStorage;
  const json=JSON.stringify({rows:raw,history:[]});
  globalThis.localStorage={getItem:key=>key===storageKey?json:null};
@@ -58,7 +58,7 @@ test('legacy cache, legacy Excel and exports use the same merged category while 
   const added=validateGrid([fields.map(f=>f[1]),fields.map(([key])=>newHuman[key])],restored.rows,['人类干扰']);
   assert.equal(added.issues.length,0);assert.equal(added.additions[0].species,'人类干扰');assert.equal(added.additions[0].sourceSpecies,'工作人员');
   const book=makeWorkbook(restored.rows);const output=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});
-  assert.equal(output.slice(1).filter(row=>row[6]==='人类干扰').length,19);
-  assert.equal(output.slice(1).filter(row=>humanSources.includes(row[6])).length,0);
+  assert.equal(output.slice(1).filter(row=>row[6]==='人类干扰').length,0);
+  assert.equal(output.slice(1).filter(row=>humanSources.includes(row[6])).length,19);
  }finally{globalThis.localStorage=previous;}
 });

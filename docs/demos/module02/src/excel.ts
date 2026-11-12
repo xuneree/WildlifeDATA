@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
-import { fields, normalizeHeader, normalizeSpeciesLabel, validateGrid } from './data.ts';
+import { fields, normalizeHeader, sourceSpeciesLabel, validateGrid } from './data.ts';
+import type { LabelMapping } from './label-mapping.ts';
 import type { RecordRow } from './data.ts';
 
-export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: string[]) {
+export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: string[], mapping?: LabelMapping) {
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: false, cellNF: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   if (!sheet) throw new Error('Excel 中未找到工作表。');
@@ -17,10 +18,10 @@ export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: st
       if (cell?.t === 'n' && /^0+$/.test(cell.z || '')) grid[r][column] = XLSX.utils.format_cell(cell);
     }
   }
-  return validateGrid(grid, existing, labels, !!workbook.Workbook?.WBProps?.date1904);
+  return validateGrid(grid, existing, labels, !!workbook.Workbook?.WBProps?.date1904, mapping);
 }
 export function makeWorkbook(rows: RecordRow[]) {
-  const sheet = XLSX.utils.aoa_to_sheet([fields.map(f => f[1]), ...rows.map(r => fields.map(([key]) => key === 'species' ? normalizeSpeciesLabel(r.species) : key === 'independent' && r[key] !== '' ? Number(r[key]) : r[key]))]);
+  const sheet = XLSX.utils.aoa_to_sheet([fields.map(f => f[1]), ...rows.map(r => fields.map(([key]) => key === 'species' ? sourceSpeciesLabel(r) : key === 'independent' && r[key] !== '' ? Number(r[key]) : r[key]))]);
   sheet['!cols'] = fields.map(([key]) => ({ wch: key === 'folder' ? 65 : key === 'file' ? 40 : 16 }));
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, '物种识别');
