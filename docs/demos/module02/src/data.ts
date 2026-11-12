@@ -1,8 +1,14 @@
 export const fields = [
-  ['folder', '文件夹'], ['file', '文件名'], ['site', '位点名称'],
+  ['folder', '文件夹'], ['file', '文件名'], ['site', '位点'],
   ['camera', '相机编号'], ['date', '拍摄日期'], ['time', '拍摄时间'],
-  ['species', '物种'], ['period', '回收时段'], ['independent', '独立拍摄'],
+  ['species', '物种标签'], ['period', '回收批次'], ['independent', '独立拍摄'],
 ] as const;
+// New downloads use canonical headers; original user workbooks remain readable.
+const headerAliases: Record<string, string> = { '位点名称': '位点', '物种': '物种标签', '回收时段': '回收批次' };
+export const normalizeHeader = (values: unknown[]) => values.map(value => {
+  const name = String(value ?? '').trim();
+  return headerAliases[name] ?? name;
+});
 export type DataField = typeof fields[number][0];
 export type RecordRow = Record<DataField, string> & { id: string };
 export type ImportIssue = { id: string; row: number; field: string; value: string; reason: string };
@@ -37,10 +43,10 @@ export function timeText(value: unknown): string {
   return /^\d{1,2}:\d{2}(:\d{2})?$/.test(text) ? text.split(':').concat(text.split(':').length === 2 ? ['00'] : []).map(n => n.padStart(2, '0')).join(':') : text;
 }
 export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabels: string[], date1904 = false): ImportPreview {
-  const header = (grid[0] || []).map(v => String(v ?? '').trim());
+  const header = normalizeHeader(grid[0] || []);
   const missing = fields.filter(([, label]) => !header.includes(label)).map(f => f[1]);
   if (missing.length) throw new Error(`缺少表头：${missing.join('、')}。请使用导入模板。`);
-  if (new Set(header.filter(Boolean)).size !== header.filter(Boolean).length) throw new Error('表头名称重复，请修正后重新上传。');
+  if (new Set(header.filter(Boolean)).size !== header.filter(Boolean).length) throw new Error('表头名称重复（包括同一字段的新旧名称），请每个字段只保留一列。');
   const additions: RecordRow[] = [], issues: ImportIssue[] = [];
   const seen = new Map(existing.map(r => [recordKey(r), r]));
   let duplicates = 0, total = 0;
@@ -56,9 +62,9 @@ export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabe
     for (const [key, label] of fields) if (key !== 'independent' && !row[key]) addIssue(label, '', '不能为空');
     if (row.date && !validDate(row.date)) addIssue('拍摄日期', row.date, '日期无效，请使用 YYYY-MM-DD 或 Excel 日期');
     if (row.time && !/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(row.time)) addIssue('拍摄时间', row.time, '时间无效，请使用 HH:mm:ss');
-    if (row.period && !/^\d{4}(0[1-9]|1[0-2])$/.test(row.period)) addIssue('回收时段', row.period, '请使用 YYYYMM');
+    if (row.period && !/^\d{4}(0[1-9]|1[0-2])$/.test(row.period)) addIssue('回收批次', row.period, '请使用 YYYYMM');
     if (!['', '0', '1'].includes(row.independent)) addIssue('独立拍摄', row.independent, '仅支持 1、0 或空值');
-    if (row.species && !knownLabels.includes(row.species)) addIssue('物种', row.species, '未识别标签，请先核对物种字典');
+    if (row.species && !knownLabels.includes(row.species)) addIssue('物种标签', row.species, '未识别标签，请先核对物种字典');
     const previous = seen.get(recordKey(row));
     if (previous) {
       if (sameRecord(previous, row)) duplicates++;

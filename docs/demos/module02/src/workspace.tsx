@@ -1,17 +1,20 @@
 import React, {useMemo, useRef, useState} from 'react';
 import {Alert,App,Breadcrumb,Button,Card,Col,DatePicker,Descriptions,Drawer,Empty,Flex,Form,Grid,Input,Layout,Menu,Modal,Radio,Result,Row,Select,Space,Spin,Statistic,Steps,Table,Tag,theme,Tooltip,Typography,Upload} from 'antd';
 import type {TableColumnsType} from 'antd';
-import {CameraOutlined,CheckCircleOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
+import {CameraOutlined,DownloadOutlined,FileExcelOutlined,FileTextOutlined,HistoryOutlined,InboxOutlined,MenuFoldOutlined,MenuUnfoldOutlined,SearchOutlined,TagsOutlined,TeamOutlined,UploadOutlined} from '@ant-design/icons';
 import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import sample from './sample.json';
+import siteDirectory from './site-context.json';
+import {matchesSiteContext,siteContextOptions,siteForRecord} from './locations';
+import type {SiteContextFilters} from './locations';
 import {fields,isIndependentCapture,loadDataset,persistDataset,storageKey,uniqueValues,validateGrid} from './data';
 import type {Dataset,ImportBatch,ImportIssue,ImportPreview,RecordRow} from './data';
 const {Header,Sider,Content}=Layout;
 const {Text,Title}=Typography;
 const seed:RecordRow[]=sample.map((r,i)=>({...r,id:`sample-${i}`}));
 const knownLabels=uniqueValues(seed,'species');
-type Filters={keyword?:string;species?:string;site?:string;camera?:string;period?:string;independent?:string;dates?:[Dayjs,Dayjs]|null};
+type Filters=SiteContextFilters & {keyword?:string;species?:string;site?:string;camera?:string;period?:string;independent?:string;dates?:[Dayjs,Dayjs]|null};
 type Dialog='import'|'export'|'history'|null;
 
 export function SpeciesWorkspace(){
@@ -24,7 +27,9 @@ export function SpeciesWorkspace(){
  const [step,setStep]=useState(0),[filename,setFilename]=useState(''),[preview,setPreview]=useState<ImportPreview|null>(null),[importError,setImportError]=useState('');
  const [reading,setReading]=useState(false),[saving,setSaving]=useState(false),[exporting,setExporting]=useState(false),[exportScope,setExportScope]=useState('filtered'),[showFolder,setShowFolder]=useState(false);
  const readGeneration=useRef(0),importLock=useRef(false);const tableRef=useRef<HTMLDivElement>(null);
- const filtered=useMemo(()=>{const query=filters.keyword?.toLocaleLowerCase().trim();return rows.filter(r=>(!query||[r.file,r.folder,r.species,r.site,r.camera].some(v=>v.toLocaleLowerCase().includes(query)))&&(!filters.species||r.species===filters.species)&&(!filters.site||r.site===filters.site)&&(!filters.camera||r.camera===filters.camera)&&(!filters.period||r.period===filters.period)&&(!filters.independent||(isIndependentCapture(r.independent)===(filters.independent==='1')))&&(!filters.dates?.[0]||r.date>=filters.dates[0].format('YYYY-MM-DD'))&&(!filters.dates?.[1]||r.date<=filters.dates[1].format('YYYY-MM-DD')));},[rows,filters]);
+ const filtered=useMemo(()=>{const query=filters.keyword?.toLocaleLowerCase().trim();return rows.filter(r=>(!query||[r.file,r.folder,r.species,r.site,r.camera].some(v=>v.toLocaleLowerCase().includes(query)))&&(!filters.species||r.species===filters.species)&&(!filters.site||r.site===filters.site)&&matchesSiteContext(r,filters,siteDirectory)&&(!filters.camera||r.camera===filters.camera)&&(!filters.period||r.period===filters.period)&&(!filters.independent||(isIndependentCapture(r.independent)===(filters.independent==='1')))&&(!filters.dates?.[0]||r.date>=filters.dates[0].format('YYYY-MM-DD'))&&(!filters.dates?.[1]||r.date<=filters.dates[1].format('YYYY-MM-DD')));},[rows,filters]);
+ const contextOptions=useMemo(()=>siteContextOptions(rows,siteDirectory),[rows]);
+ const detailSite=detail?siteForRecord(detail,siteDirectory):undefined;
  const activeFilters=Object.values(filters).filter(v=>v!=null&&v!=='').length;
  const exportRows=exportScope==='all'?rows:exportScope==='selected'?rows.filter(r=>selection.includes(r.id)):filtered;
  function resetFilters(){form.resetFields();setFilters({});setPage(1);}
@@ -33,18 +38,18 @@ export function SpeciesWorkspace(){
  async function download(records:RecordRow[],name:string){setExporting(true);try{const {downloadExcel}=await import('./excel');downloadExcel(records,name);void message.success(`已生成 Excel，共 ${records.length} 条记录`);return true;}catch{void message.error('文件生成失败，请重试。');return false;}finally{setExporting(false);}}
  async function inspectFile(file:File){if(reading)return;const generation=++readGeneration.current;setFilename(file.name);setImportError('');setPreview(null);setStep(0);if(!/\.xlsx?$/i.test(file.name)){setImportError('请选择 .xlsx 或 .xls 格式的文件。');return;}if(file.size>20*1024*1024){setImportError('文件不能超过 20 MB，请拆分后重新上传。');return;}setReading(true);try{const {readExcel}=await import('./excel');const result=readExcel(await file.arrayBuffer(),rows,knownLabels);if(generation===readGeneration.current){setPreview(result);setStep(1);}}catch(error){if(generation===readGeneration.current)setImportError(error instanceof Error?error.message:'文件读取失败，请检查文件是否损坏或加密。');}finally{if(generation===readGeneration.current)setReading(false);}}
  async function confirmImport(){if(!preview||preview.issues.length||!preview.additions.length||importLock.current)return;importLock.current=true;setSaving(true);setImportError('');try{const checked=validateGrid([fields.map(f=>f[1]),...preview.additions.map(r=>fields.map(([key])=>r[key]))],rows,knownLabels);if(checked.issues.length||checked.duplicates)throw new Error('数据在预检后发生变化，请重新选择文件并校验。');const stored=localStorage.getItem(storageKey);if(stored&&JSON.stringify((JSON.parse(stored) as Dataset).rows)!==JSON.stringify(rows))throw new Error('其他页面已更新数据，请刷新列表后重新导入。');const next:Dataset={rows:[...rows,...checked.additions],history:[{id:crypto.randomUUID(),name:filename,count:checked.additions.length,skipped:preview.duplicates,time:new Date().toISOString()},...history]};persistDataset(next);setDataset(next);setSelection([]);resetFilters();setStep(2);}catch(error){const text=error instanceof Error&&/数据|页面/.test(error.message)?error.message:'保存失败，未新增记录。请检查浏览器可用存储空间后重试。';setImportError(text);notification.error({title:'导入未完成',description:text});}finally{importLock.current=false;setSaving(false);}}
- const independentTag=(r:RecordRow)=>isIndependentCapture(r.independent)?<Tag icon={<CheckCircleOutlined/>} color="success">是</Tag>:<Tag>否</Tag>;
+ const independentTag=(r:RecordRow)=><Text type="secondary">{isIndependentCapture(r.independent)?'是':'否'}</Text>;
  const columns:TableColumnsType<RecordRow>=[
   {title:'文件名',dataIndex:'file',key:'file',width:300,render:(value,r)=><Tooltip title={value}><Button type="link" onClick={()=>setDetail(r)} style={{padding:0,maxWidth:'100%',textAlign:'left'}}><FileTextOutlined/><span className="filename-text">{value}</span></Button></Tooltip>},
-  {title:'物种 / 标签',dataIndex:'species',width:110,render:value=><Tag color={value==='豹'||value==='豹猫'?'blue':'default'}>{value}</Tag>},
-  {title:'位点名称',dataIndex:'site',width:85},{title:'相机编号',dataIndex:'camera',width:95},
-  {title:'拍摄日期 / 时间',dataIndex:'date',key:'captured',width:160,sorter:(a,b)=>(a.date+a.time).localeCompare(b.date+b.time),render:(_,r)=><Flex vertical><Text>{r.date}</Text><Text type="secondary">{r.time}</Text></Flex>},
-  {title:'回收时段',dataIndex:'period',width:100},{title:'独立拍摄',key:'independent',width:110,render:(_,r)=>independentTag(r)},
+  {title:'物种标签',dataIndex:'species',width:110,render:value=><Tag color={value==='豹'||value==='豹猫'?'blue':'default'}>{value}</Tag>},
+  {title:'位点',dataIndex:'site',width:85},{title:'相机编号',dataIndex:'camera',width:95},
+  {title:'拍摄时间',dataIndex:'date',key:'captured',width:160,sorter:(a,b)=>(a.date+a.time).localeCompare(b.date+b.time),render:(_,r)=><Flex vertical><Text>{r.date}</Text><Text type="secondary">{r.time}</Text></Flex>},
+  {title:'回收批次',dataIndex:'period',width:100},{title:'独立拍摄',key:'independent',width:110,render:(_,r)=>independentTag(r)},
   ...(showFolder?[{title:'文件夹',dataIndex:'folder',key:'folder',width:320,ellipsis:true}]:[]),
   {title:'操作',key:'actions',fixed:'right',width:72,render:(_,r)=><Button type="link" size="small" onClick={()=>setDetail(r)}>详情</Button>},
  ];
  const issueColumns:TableColumnsType<ImportIssue>=[{title:'Excel 行号',dataIndex:'row',width:100},{title:'字段',dataIndex:'field',width:110},{title:'原值',dataIndex:'value',width:140,ellipsis:true,render:v=>v||'（空值）'},{title:'问题',dataIndex:'reason',width:300}];
- const previewColumns:TableColumnsType<RecordRow>=[{title:'文件名',dataIndex:'file',width:300,ellipsis:true},{title:'物种',dataIndex:'species',width:100},{title:'位点',dataIndex:'site',width:80},{title:'拍摄日期',dataIndex:'date',width:130}];
+ const previewColumns:TableColumnsType<RecordRow>=[{title:'文件名',dataIndex:'file',width:300,ellipsis:true},{title:'物种标签',dataIndex:'species',width:100},{title:'位点',dataIndex:'site',width:80},{title:'拍摄时间',dataIndex:'date',width:170,render:(_,r)=>`${r.date} ${r.time}`}];
  const historyColumns:TableColumnsType<ImportBatch>=[{title:'导入文件',dataIndex:'name',ellipsis:true,width:260},{title:'导入时间',dataIndex:'time',width:180,render:value=>dayjs(value).isValid()?dayjs(value).format('YYYY-MM-DD HH:mm:ss'):value},{title:'新增',dataIndex:'count',width:75},{title:'跳过',dataIndex:'skipped',width:75}];
  const navigation=<Menu mode="inline" selectedKeys={['species']} items={[{key:'camera',icon:<CameraOutlined/>,label:'相机位点',disabled:true},{key:'species',icon:<TagsOutlined/>,label:'物种识别'},{key:'individuals',icon:<TeamOutlined/>,label:'个体档案',disabled:true}]} onClick={()=>setNavOpen(false)}/>;
  const filterOptions=(key:'site'|'camera'|'period'|'species')=>uniqueValues(rows,key).map(value=>({value,label:value}));
@@ -59,17 +64,20 @@ export function SpeciesWorkspace(){
     <Card title="筛选条件" size="small" extra={<Button type="link" size="small" disabled={!activeFilters} onClick={resetFilters}>重置筛选</Button>}>
      <Form form={form} layout="vertical" onValuesChange={(_,all:Filters)=>{setFilters(all);setPage(1);}}><Row gutter={16}>
       <Col xs={24} md={12} xl={8}><Form.Item label="关键词" name="keyword"><Input aria-label="关键词" allowClear prefix={<SearchOutlined/>} placeholder="文件名、物种、位点或相机编号"/></Form.Item></Col>
-      <Col xs={12} md={6} xl={4}><Form.Item label="物种 / 标签" name="species"><Select aria-label="物种 / 标签" allowClear showSearch placeholder="全部标签" options={filterOptions('species')}/></Form.Item></Col>
-      <Col xs={12} md={6} xl={4}><Form.Item label="位点名称" name="site"><Select aria-label="位点名称" allowClear showSearch placeholder="全部位点" options={filterOptions('site')}/></Form.Item></Col>
+      <Col xs={12} md={6} xl={4}><Form.Item label="物种标签" name="species"><Select aria-label="物种标签" allowClear showSearch placeholder="全部标签" options={filterOptions('species')}/></Form.Item></Col>
+      <Col xs={12} md={6} xl={4}><Form.Item label="位点" name="site"><Select aria-label="位点" allowClear showSearch placeholder="全部位点" options={filterOptions('site')}/></Form.Item></Col>
+      <Col xs={12} md={8} xl={4}><Form.Item label="区域" name="region"><Select aria-label="区域" allowClear showSearch placeholder="全部区域" options={contextOptions.regions}/></Form.Item></Col>
+      <Col xs={12} md={8} xl={4}><Form.Item label="小地名" name="locality"><Select aria-label="小地名" allowClear showSearch placeholder="全部小地名" options={contextOptions.localities}/></Form.Item></Col>
+      <Col xs={24} md={8} xl={4}><Form.Item label="项目" name="project"><Select aria-label="项目" allowClear showSearch placeholder="全部项目" options={contextOptions.projects}/></Form.Item></Col>
       <Col xs={12} md={8} xl={4}><Form.Item label="相机编号" name="camera"><Select aria-label="相机编号" allowClear showSearch placeholder="全部相机" options={filterOptions('camera')}/></Form.Item></Col>
-      <Col xs={12} md={8} xl={4}><Form.Item label="回收时段" name="period"><Select aria-label="回收时段" allowClear placeholder="全部时段" options={filterOptions('period')}/></Form.Item></Col>
-      <Col xs={24} md={12} xl={8}><Form.Item label="拍摄日期" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item></Col>
+      <Col xs={12} md={8} xl={4}><Form.Item label="回收批次" name="period"><Select aria-label="回收批次" allowClear placeholder="全部批次" options={filterOptions('period')}/></Form.Item></Col>
+      <Col xs={24} md={12} xl={8}><Form.Item label="拍摄时间" name="dates"><DatePicker.RangePicker placeholder={['开始日期','结束日期']} format="YYYY-MM-DD" style={{width:'100%'}}/></Form.Item></Col>
       <Col xs={24} md={8} xl={4}><Form.Item label="独立拍摄" name="independent"><Select aria-label="独立拍摄" allowClear placeholder="全部记录" options={[{value:'1',label:'独立拍摄'},{value:'0',label:'非独立拍摄'}]}/></Form.Item></Col>
      </Row></Form>
     </Card>
     <Flex component="section" aria-label="筛选结果统计" wrap gap={token.marginLG} className="workspace-statistics" style={{marginBlock:token.margin,paddingInline:token.paddingSM}}>
      <Text type="secondary">识别记录 {filtered.length} 条</Text>
-     <Text type="secondary">物种及其他标签 {uniqueValues(filtered,'species').length} 类</Text>
+     <Text type="secondary">物种标签 {uniqueValues(filtered,'species').length} 类</Text>
      <Text type="secondary">监测位点 {uniqueValues(filtered,'site').length} 个</Text>
      <Text type="secondary">独立拍摄 {filtered.filter(r=>isIndependentCapture(r.independent)).length} 条</Text>
     </Flex>
@@ -81,11 +89,11 @@ export function SpeciesWorkspace(){
   </Layout>
   <Drawer title="数据管理" open={navOpen&&!screens.md} placement="left" size={240} onClose={()=>setNavOpen(false)}>{navigation}</Drawer>
   <Drawer title="识别记录详情" open={!!detail} size={screens.md?520:'100%'} onClose={()=>setDetail(null)} focusable={{trap:true,focusTriggerAfterClose:true}} extra={<Button aria-label="下载此记录" icon={<DownloadOutlined/>} loading={exporting} onClick={()=>detail&&void download([detail],'物种识别_单条记录.xlsx')}>下载此记录</Button>}>
-   {detail&&<Descriptions column={1} bordered size="small" items={fields.map(([key,label])=>({key,label,children:key==='independent'?independentTag(detail):key==='folder'?<Text copyable style={{wordBreak:'break-all'}}>{detail[key]}</Text>:<span style={{wordBreak:'break-all'}}>{detail[key]}</span>}))}/>}
+   {detail&&<Descriptions column={1} bordered size="small" items={[...fields.map(([key,label])=>({key,label,children:key==='independent'?independentTag(detail):key==='folder'?<Text copyable style={{wordBreak:'break-all'}}>{detail[key]}</Text>:<span style={{wordBreak:'break-all'}}>{detail[key]}</span>})),{key:'region',label:'区域',children:detailSite?.region||'未关联'},{key:'locality',label:'小地名',children:detailSite?.locality||'未填写'},{key:'project',label:'项目',children:detailSite?siteDirectory.projects.filter(p=>detailSite.projectIds.includes(p.id)).map(p=>p.name).join('、')||'未关联项目':'未关联'}]}/>}
   </Drawer>
   <Modal title="导入物种识别数据" open={dialog==='import'} width={screens.md?820:'100%'} onCancel={closeDialog} closable={!reading&&!saving} keyboard={!reading&&!saving} mask={{closable:false}} focusable={{trap:true,focusTriggerAfterClose:true}} destroyOnHidden footer={importFooter}>
    <Steps current={step} size="small" items={[{title:'选择文件'},{title:'数据预检'},{title:'导入结果'}]} style={{marginBlock:token.marginLG}}/>
-   {step===0&&<Flex vertical gap={16}><Upload.Dragger accept=".xlsx,.xls" multiple={false} showUploadList={false} disabled={reading} beforeUpload={file=>{void inspectFile(file);return Upload.LIST_IGNORE;}}><InboxOutlined style={{fontSize:40,color:token.colorPrimary}}/><Title level={5}>点击选择或拖拽 Excel 文件</Title><Text type="secondary">支持 .xlsx、.xls，单个文件不超过 20 MB</Text></Upload.Dragger>{reading&&<Space><Spin size="small"/><Text>正在读取并校验 {filename}…</Text></Space>}<Flex justify="space-between" align="center" wrap gap={8}><Text type="secondary">使用标准表头导入，首行为字段名。</Text><Button icon={<DownloadOutlined/>} loading={exporting} onClick={()=>void download([],'物种识别_导入模板.xlsx')}>下载导入模板</Button></Flex><Text type="secondary">字段：{fields.map(f=>f[1]).join('、')}。独立拍摄：1 为是，0 或空值为否。</Text></Flex>}
+   {step===0&&<Flex vertical gap={16}><Upload.Dragger accept=".xlsx,.xls" multiple={false} showUploadList={false} disabled={reading} beforeUpload={file=>{void inspectFile(file);return Upload.LIST_IGNORE;}}><InboxOutlined style={{fontSize:40,color:token.colorPrimary}}/><Title level={5}>点击选择或拖拽 Excel 文件</Title><Text type="secondary">支持 .xlsx、.xls，单个文件不超过 20 MB</Text></Upload.Dragger>{reading&&<Space><Spin size="small"/><Text>正在读取并校验 {filename}…</Text></Space>}<Flex justify="space-between" align="center" wrap gap={8}><Text type="secondary">使用标准表头导入，首行为字段名。</Text><Button icon={<DownloadOutlined/>} loading={exporting} onClick={()=>void download([],'物种识别_导入模板.xlsx')}>下载导入模板</Button></Flex><Text type="secondary">字段：{fields.map(f=>f[1]).join('、')}。独立拍摄：1 为是，0 或空值为否。回收批次兼容旧表头“回收时段”。</Text></Flex>}
    {step===1&&preview&&<Flex vertical gap={16}><Flex justify="space-between" align="center" gap={12}><Space><FileExcelOutlined style={{color:token.colorSuccess,fontSize:24}}/><Text strong>{filename}</Text></Space><Button onClick={()=>{setStep(0);setImportError('');}} disabled={saving}>重新选择</Button></Flex><Row gutter={16}><Col span={8}><Statistic title="待新增记录" value={preview.additions.length} suffix="条"/></Col><Col span={8}><Statistic title="重复记录" value={preview.duplicates} suffix="条"/></Col><Col span={8}><Statistic title="校验问题" value={preview.issues.length} suffix="项" styles={{content:preview.issues.length?{color:token.colorError}:undefined}}/></Col></Row>{preview.issues.length?<><Alert type="error" showIcon title="校验未通过，本批记录尚未导入" description="请根据行号与字段修正原文件，重新选择后校验。"/><Table rowKey="id" size="small" columns={issueColumns} dataSource={preview.issues} pagination={{pageSize:5,showSizeChanger:false,showTotal:total=>`共 ${total} 项问题`}} scroll={{x:650}}/></>:<><Alert type={preview.additions.length?'success':'info'} showIcon title={preview.additions.length?'预检通过，确认后新增记录':'全部记录已存在，无需重复导入'} description={`共读取 ${preview.total} 条，重复 ${preview.duplicates} 条将跳过。不会覆盖已有记录。`}/>{preview.additions.length>0&&<><Text type="secondary">待新增记录预览（前 5 条）</Text><Table rowKey="id" size="small" columns={previewColumns} dataSource={preview.additions.slice(0,5)} pagination={false} scroll={{x:610}}/></>}</>}</Flex>}
    {step===2&&preview&&<Result status="success" title="导入完成" subTitle={`成功新增 ${preview.additions.length} 条记录，跳过 ${preview.duplicates} 条重复记录。`}/>}
    {importError&&<Alert type="error" showIcon role="alert" title="未能完成导入" description={importError} style={{marginTop:token.margin}}/>}

@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { fields, validateGrid } from './data.ts';
+import { fields, normalizeHeader, validateGrid } from './data.ts';
 import type { RecordRow } from './data.ts';
 
 export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: string[]) {
@@ -7,9 +7,9 @@ export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: st
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   if (!sheet) throw new Error('Excel 中未找到工作表。');
   const grid = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', blankrows: true });
-  const header = (grid[0] || []).map(v => String(v ?? '').trim());
+  const header = normalizeHeader(grid[0] || []);
   // Number identifiers with an explicit zero-padding format retain their visible zeros.
-  for (const label of ['位点名称', '相机编号', '回收时段']) {
+  for (const label of ['位点', '相机编号', '回收批次']) {
     const column = header.indexOf(label);
     if (column < 0) continue;
     for (let r = 1; r < grid.length; r++) {
