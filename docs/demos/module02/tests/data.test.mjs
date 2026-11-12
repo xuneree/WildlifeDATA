@@ -1,0 +1,36 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import * as XLSX from 'xlsx';
+import { fields, isIndependentCapture, validateGrid, dateText, timeText, sameRecord } from '../src/data.ts';
+import { readExcel, makeWorkbook } from '../src/excel.ts';
+const sample=JSON.parse(fs.readFileSync(new URL('../src/sample.json',import.meta.url)));
+const seed=sample.map((r,i)=>({...r,id:`sample-${i}`}));
+const labels=[...new Set(seed.map(r=>r.species))];
+const header=fields.map(f=>f[1]);
+const grid=rows=>[header,...rows.map(r=>fields.map(([key])=>r[key]))];
+const newRow={...seed[0],folder:'T:/new/one.mp4',file:'one.mp4',site:'001',camera:'001A'};
+function parse(book,existing=[]){const buffer=XLSX.write(book,{type:'array',bookType:'xlsx'});return readExcel(buffer,existing,labels);}
+test('200-row attachment semantics and blank independent marks survive a real XLSX round trip',()=>{const result=parse(makeWorkbook(seed));assert.equal(result.total,200);assert.equal(result.issues.length,0);assert.equal(result.additions.filter(r=>r.independent==='').length,67);assert.equal(result.additions.filter(r=>r.independent==='1').length,133);assert.equal(new Set(result.additions.map(r=>r.species)).size,14);assert.ok(result.additions.every((r,i)=>sameRecord(r,seed[i])));});
+test('identical repeats skip, changed same-file labels block, separate species labels coexist',()=>{const exact=validateGrid(grid(seed),seed,labels);assert.equal(exact.duplicates,200);assert.equal(exact.additions.length,0);const changed={...seed[0],independent:'0'};assert.ok(validateGrid(grid([changed]),seed,labels).issues.some(i=>i.field==='记录冲突'));const anotherLabel={...newRow,species:'豹'};const multiple=validateGrid(grid([newRow,anotherLabel,newRow]),seed,labels);assert.equal(multiple.additions.length,2);assert.equal(multiple.duplicates,1);assert.equal(multiple.issues.length,0);});
+test('invalid dates/times/batches/independent marks and unknown labels locate the field and Excel row',()=>{const invalid={...newRow,date:'2026-02-30',time:'25:90:00',period:'202613',independent:'true',species:'未知新标签'};const result=validateGrid(grid([newRow,invalid]),seed,labels);assert.ok(result.issues.length>=5);assert.ok(result.issues.every(i=>i.row===3));for(const field of ['拍摄日期','拍摄时间','回收批次','独立拍摄','物种标签'])assert.ok(result.issues.some(i=>i.field===field));});
+test('missing or duplicate headers reject; reordered columns and blank rows are accepted',()=>{assert.throws(()=>validateGrid([['物种'],['豹']],seed,labels),/缺少表头/);assert.throws(()=>validateGrid([[...header,'物种']],seed,labels),/重复/);const input=grid([newRow]);const reversed=input.map(r=>[...r].reverse());reversed.push([]);const result=validateGrid(reversed,seed,labels);assert.equal(result.total,1);assert.equal(result.issues.length,0);assert.equal(result.additions[0].camera,'001A');});
+test('Excel date systems, fractions and impossible leap dates keep date/time precision',()=>{assert.equal(dateText(46214),'2026-07-11');assert.equal(dateText(0,true),'1904-01-01');assert.equal(dateText(1),'1900-01-01');assert.equal(timeText(.5),'12:00:00');assert.equal(timeText('1:02'),'01:02:00');const values=grid([newRow]);values[1][4]=46214;values[1][5]=.5;const result=validateGrid(values,seed,labels);assert.equal(result.additions[0].date,'2026-07-11');assert.equal(result.additions[0].time,'12:00:00');values[1][4]=60;assert.ok(validateGrid(values,seed,labels).issues.some(i=>i.field==='拍摄日期'));});
+test('explicitly zero-padded Excel number identifiers remain strings with leading zeros',()=>{const book=makeWorkbook([newRow]);const sheet=book.Sheets[book.SheetNames[0]];sheet.C2={t:'n',v:1,z:'000'};const result=parse(book);assert.equal(result.additions[0].site,'001');assert.equal(result.additions[0].camera,'001A');});
+test('download has exact nine-column header, no invented rows, and preserves 0 versus blank',()=>{const book=makeWorkbook([{...newRow,independent:'0'}, {...newRow,independent:''}]);const data=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});assert.deepEqual(data[0],header);assert.equal(data[1][8],0);assert.equal(data[2][8],'');assert.equal(data[1][2],'001');const template=makeWorkbook([]);assert.equal(XLSX.utils.sheet_to_json(template.Sheets[template.SheetNames[0]],{header:1}).length,1);});
+
+test('Excel blanks and explicit zero are both non-independent without rewriting source values',()=>{const result=parse(makeWorkbook([...seed,{...newRow,independent:'0'}]));assert.equal(result.issues.length,0);assert.equal(result.additions.filter(r=>!isIndependentCapture(r.independent)).length,68);assert.equal(result.additions.filter(r=>isIndependentCapture(r.independent)).length,133);assert.equal(result.additions.filter(r=>r.independent==='').length,67);assert.equal(isIndependentCapture('0'),false);assert.equal(isIndependentCapture(''),false);});
+
+test('canonical template names and legacy headers both import; batch aliases cannot silently shadow each other',()=>{
+ const canonical=grid([newRow]);
+ assert.deepEqual(canonical[0],['文件夹','文件名','位点','相机编号','拍摄日期','拍摄时间','物种标签','回收批次','独立拍摄']);
+ const legacy=[canonical[0].map(h=>({'位点':'位点名称','物种标签':'物种','回收批次':'回收时段'}[h]||h)),canonical[1]];
+ const oldResult=validateGrid(legacy,seed,labels),newResult=validateGrid(canonical,seed,labels);
+ assert.equal(oldResult.issues.length,0);assert.equal(newResult.issues.length,0);
+ assert.ok(sameRecord(oldResult.additions[0],newResult.additions[0]));
+ assert.throws(()=>validateGrid([[...canonical[0],'回收时段'],[...canonical[1],'202608']],seed,labels),/重复/);
+ for(const header of [canonical[0],legacy[0]]){
+  const book=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([header,canonical[1]]);ws.C2={t:'n',v:1,z:'000'};
+  XLSX.utils.book_append_sheet(book,ws,'识别');const result=parse(book);assert.equal(result.issues.length,0);assert.equal(result.additions[0].site,'001');assert.equal(result.additions[0].period,newRow.period);
+ }
+});

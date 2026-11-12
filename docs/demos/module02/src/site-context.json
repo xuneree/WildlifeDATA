@@ -1,0 +1,13 @@
+{
+  "source": "Synthetic demo associations; not actual metadata for the Excel sample sites.",
+  "projects": [
+    { "id": "demo-project-regular", "name": "常规监测项目" },
+    { "id": "demo-project-special", "name": "专项监测项目" }
+  ],
+  "sites": [
+    { "id": "demo-site-103", "code": "103", "region": "区域一", "locality": "小地名一", "projectIds": ["demo-project-regular", "demo-project-special"] },
+    { "id": "demo-site-106", "code": "106", "region": "区域一", "locality": "小地名二", "projectIds": ["demo-project-regular"] },
+    { "id": "demo-site-107", "code": "107", "region": "区域二", "locality": "小地名三", "projectIds": ["demo-project-special"] },
+    { "id": "demo-site-108", "code": "108", "region": "区域二", "locality": "小地名四", "projectIds": [] }
+  ]
+}

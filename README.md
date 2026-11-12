@@ -47,6 +47,10 @@ docker compose up -d --wait
 
 请勿在有数据时运行 `docker compose down -v`；该命令会删除数据库卷。
 
+## 开工基线核验
+
+先读取 [AGENTS.md](AGENTS.md)，运行 `python3 scripts/task-preflight.py --target <修改路径>`；界面任务加 `--ui`。脚本核对远端基线及必读入口，不能代替阅读需求和设计规范。当前状态入口见 [PROJECT_STATUS](docs/PROJECT_STATUS.md)。
+
 ## 开发与自动化检查
 
 Python 3.12；Node.js 24；uv 0.12.23。依赖通过 uv.lock / package-lock.json 固定。
