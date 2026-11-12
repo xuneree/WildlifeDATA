@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { fields, normalizeHeader, validateGrid } from './data.ts';
+import { fields, normalizeHeader, normalizeSpeciesLabel, validateGrid } from './data.ts';
 import type { RecordRow } from './data.ts';
 
 export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: string[]) {
@@ -20,7 +20,7 @@ export function readExcel(buffer: ArrayBuffer, existing: RecordRow[], labels: st
   return validateGrid(grid, existing, labels, !!workbook.Workbook?.WBProps?.date1904);
 }
 export function makeWorkbook(rows: RecordRow[]) {
-  const sheet = XLSX.utils.aoa_to_sheet([fields.map(f => f[1]), ...rows.map(r => fields.map(([key]) => key === 'independent' && r[key] !== '' ? Number(r[key]) : r[key]))]);
+  const sheet = XLSX.utils.aoa_to_sheet([fields.map(f => f[1]), ...rows.map(r => fields.map(([key]) => key === 'species' ? normalizeSpeciesLabel(r.species) : key === 'independent' && r[key] !== '' ? Number(r[key]) : r[key]))]);
   sheet['!cols'] = fields.map(([key]) => ({ wch: key === 'folder' ? 65 : key === 'file' ? 40 : 16 }));
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, '物种识别');

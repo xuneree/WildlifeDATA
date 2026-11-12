@@ -10,16 +10,23 @@ export const normalizeHeader = (values: unknown[]) => values.map(value => {
   return headerAliases[name] ?? name;
 });
 export type DataField = typeof fields[number][0];
-export type RecordRow = Record<DataField, string> & { id: string };
+export type RecordRow = Record<DataField, string> & { id: string; sourceSpecies?: string };
 export type ImportIssue = { id: string; row: number; field: string; value: string; reason: string };
 export type ImportPreview = { additions: RecordRow[]; duplicates: number; total: number; issues: ImportIssue[] };
 export type ImportBatch = { id: string; name: string; count: number; skipped: number; time: string };
 export type Dataset = { rows: RecordRow[]; history: ImportBatch[] };
+// Explicit aliases from the uploaded workbook; avoid guessing from arbitrary text.
+const humanLabels = new Set(['工作人员', '其他人', '采药人', '伐木人', '人类干扰']);
+export const normalizeSpeciesLabel = (label: string) => humanLabels.has(label.trim()) ? '人类干扰' : label.trim();
+export function normalizeRecordLabel(row: RecordRow): RecordRow {
+  const species = normalizeSpeciesLabel(row.species);
+  return species === row.species ? row : { ...row, species, sourceSpecies: row.sourceSpecies || row.species };
+}
 export const storageKey = 'wildlifedata-module02-demo-v1';
-export const recordKey = (r: Pick<RecordRow, 'folder' | 'file' | 'species'>) => JSON.stringify([r.folder, r.file, r.species]);
+export const recordKey = (r: Pick<RecordRow, 'folder' | 'file' | 'species'>) => JSON.stringify([r.folder, r.file, normalizeSpeciesLabel(r.species)]);
 // Excel import contract: 1 is independent; 0 and blank are non-independent.
 export const isIndependentCapture = (value: string) => value === '1';
-export const sameRecord = (a: RecordRow, b: RecordRow) => fields.every(([key]) => a[key] === b[key]);
+export const sameRecord = (a: RecordRow, b: RecordRow) => fields.every(([key]) => key === 'species' ? normalizeSpeciesLabel(a.species) === normalizeSpeciesLabel(b.species) : a[key] === b[key]);
 export const uniqueValues = (rows: RecordRow[], field: DataField) => [...new Set(rows.map(r => r[field]))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 export function validDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
@@ -54,7 +61,7 @@ export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabe
     const line = grid[i];
     if (!line || line.every(v => v === '' || v == null)) continue;
     total++;
-    const row = Object.fromEntries(fields.map(([key, label]) => [key, String(line[header.indexOf(label)] ?? '').trim()])) as RecordRow;
+    const row = normalizeRecordLabel(Object.fromEntries(fields.map(([key, label]) => [key, String(line[header.indexOf(label)] ?? '').trim()])) as RecordRow);
     row.date = dateText(line[header.indexOf('拍摄日期')], date1904);
     row.time = timeText(line[header.indexOf('拍摄时间')]);
     row.id = `record-${crypto.randomUUID()}`;
@@ -64,7 +71,7 @@ export function validateGrid(grid: unknown[][], existing: RecordRow[], knownLabe
     if (row.time && !/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(row.time)) addIssue('拍摄时间', row.time, '时间无效，请使用 HH:mm:ss');
     if (row.period && !/^\d{4}(0[1-9]|1[0-2])$/.test(row.period)) addIssue('回收批次', row.period, '请使用 YYYYMM');
     if (!['', '0', '1'].includes(row.independent)) addIssue('独立拍摄', row.independent, '仅支持 1、0 或空值');
-    if (row.species && !knownLabels.includes(row.species)) addIssue('物种标签', row.species, '未识别标签，请先核对物种字典');
+    if (row.species && !knownLabels.some(label => normalizeSpeciesLabel(label) === row.species)) addIssue('物种标签', row.species, '未识别标签，请先核对物种字典');
     const previous = seen.get(recordKey(row));
     if (previous) {
       if (sameRecord(previous, row)) duplicates++;
@@ -78,10 +85,10 @@ export function loadDataset(seed: RecordRow[]): Dataset {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
     if (saved && Array.isArray(saved.rows) && saved.rows.every((r: RecordRow) => typeof r.id === 'string' && fields.every(([k]) => typeof r[k] === 'string')) && Array.isArray(saved.history)) {
-      return { rows: saved.rows, history: saved.history.map((h: ImportBatch, i: number) => ({ ...h, id: h.id || `old-${i}` })) };
+      return { rows: saved.rows.map(normalizeRecordLabel), history: saved.history.map((h: ImportBatch, i: number) => ({ ...h, id: h.id || `old-${i}` })) };
     }
   } catch { /* An unavailable or invalid cache does not discard the supplied seed. */ }
-  return { rows: seed, history: [] };
+  return { rows: seed.map(normalizeRecordLabel), history: [] };
 }
 export function persistDataset(dataset: Dataset) {
   // Persist once before updating UI: a storage failure must not be reported as success.
