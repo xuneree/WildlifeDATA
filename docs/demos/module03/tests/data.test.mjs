@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {fields,validateGrid,filterRecords,fingerprint,loadDataset,persistDataset} from '../src/data.ts';
+import {readExcel,makeWorkbook} from '../src/excel.ts';
+import XLSX from 'xlsx';
+const sample=JSON.parse(fs.readFileSync(new URL('../src/sample.json',import.meta.url))).map((r,i)=>({...r,id:`s${i}`}));
+const grid=rows=>[fields.map(f=>f[1]),...rows.map(r=>fields.map(([k])=>r[k]))];
+test('262 条样例全部预检通过，36 个编号、16 条未编号',()=>{assert.equal(sample.length,262);assert.equal(new Set(sample.filter(r=>r.individual).map(r=>r.individual)).size,36);assert.equal(sample.filter(r=>!r.individual).length,16);const r=validateGrid(grid(sample),[]);assert.equal(r.issues.length,0);assert.equal(r.additions.length,262);});
+test('重导跳过 262 条，同一影像多个个体不合并',()=>{const r=validateGrid(grid(sample),sample);assert.equal(r.duplicates,262);assert.equal(r.additions.length,0);assert.equal(r.issues.length,0);const shared=sample.filter(r=>r.folder.includes('T22A/IMAG2026-07-21_21-31-25'));assert.equal(shared.length,3);assert.equal(validateGrid(grid(shared),[]).additions.length,3);});
+test('同文件同个体内容冲突阻止覆盖，未编号差异行保留',()=>{assert.equal(validateGrid(grid([{...sample[0],notes:'更正'}]),sample).issues[0].field,'记录冲突');const u=sample.find(r=>!r.individual);assert.equal(validateGrid(grid([u,{...u,position:'另一位置'}]),[]).additions.length,2);});
+test('表头可换序、旧名可读、重复及额外列被拦截',()=>{const g=grid([sample[0]]).map(r=>[...r].reverse());g[0]=g[0].map(v=>v==='位点'?'位点名称':v==='回收批次'?'数据期号':v);assert.equal(validateGrid(g,[]).additions[0].period,'202608');assert.throws(()=>validateGrid([['文件名']],[]),/缺少表头/);assert.throws(()=>validateGrid([fields.map(f=>f[1]).concat('位点名称')],[]),/重复/);assert.throws(()=>validateGrid([fields.map(f=>f[1]).concat('额外')],[]),/额外字段/);});
+test('日期、时间、数量与 Excel 行号校验',()=>{const r=validateGrid(grid([sample[0],{...sample[1],date:'2026-02-30',time:'25:00:00',quantity:'0'}]),[]);assert.equal(r.issues.length,3);assert(r.issues.every(i=>i.row===3));});
+test('编码保留原值，独立拍摄空值与 0、1 分开',()=>{const r=validateGrid(grid([{...sample[0],identifiable:'99',adult:'99',independent:''}]),[]);assert.equal(r.issues.length,0);assert.equal(r.additions[0].identifiable,'99');assert.equal(filterRecords(['','0','1'].map((v,i)=>({...sample[i],independent:v})),{independentOnly:true}).length,1);});
+test('组合筛选、未编号、日期边界及备注关键词',()=>{assert.equal(filterRecords(sample,{numbered:'no'}).length,16);assert.equal(filterRecords(sample,{individual:'HS2405M'}).length,25);assert.equal(filterRecords(sample,{individual:'HS2405M',sex:'F'}).length,0);assert.equal(filterRecords(sample,{keyword:'镜头位置低'}).length,1);assert.equal(filterRecords(sample,{startDate:'2026-07-01',endDate:'2026-07-01'}).length,12);});
+test('22 字段真实 Excel 往返完整保留所有行与空值',()=>{const r=readExcel(XLSX.write(makeWorkbook(sample),{type:'array',bookType:'xlsx'}),[]);assert.equal(r.issues.length,0);assert.deepEqual(r.additions.map(fingerprint),sample.map(fingerprint));});
+test('1904 日期系统、Excel 时间小数、编号前导零',()=>{const wb=makeWorkbook([sample[0]]),s=wb.Sheets[wb.SheetNames[0]];s.D2={t:'n',v:7,z:'000'};s.E2={t:'n',v:1};s.F2={t:'n',v:0.5};wb.Workbook={WBProps:{date1904:true}};const r=readExcel(XLSX.write(wb,{type:'array',bookType:'xlsx'}),[]);assert.equal(r.additions[0].site,'007');assert.equal(r.additions[0].date,'1904-01-02');assert.equal(r.additions[0].time,'12:00:00');});
+test('持久化失败抛错，刷新恢复完整记录',()=>{const values=new Map();globalThis.localStorage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};const data={rows:sample,history:[]};persistDataset(data);assert.equal(loadDataset([]).rows.length,262);globalThis.localStorage.setItem=()=>{throw new Error('quota')};assert.throws(()=>persistDataset(data),/quota/);});
