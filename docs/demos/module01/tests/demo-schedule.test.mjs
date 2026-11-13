@@ -1,0 +1,19 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {sampleRecords,ensureSampleData,migrateDemoSchedule} from '../src/samples.js';
+import {deriveCycles} from '../src/cycles.js';
+const prefix='wildlifedata-field-demo-v03-';
+function verify(operations){const keys=new Set();for(const r of operations){assert.match(r.data.op_batch,/^\d{4}(02|04|06|08|10|12)$/);assert(r.data.op_batch<='202610');assert.equal(r.operation_date,r.data.op_batch.slice(0,4)+'-'+r.data.op_batch.slice(4)+'-01');assert.equal(r.data.op_date,r.operation_date);const key=JSON.stringify([r.group,r.camera_code,r.data.op_batch]);assert(!keys.has(key),'duplicate camera/batch '+key);keys.add(key);}}
+test('all seeded cameras have one visit per two-month batch, and the typical site retains twelve visits',async()=>{
+ const s=sampleRecords();verify(s.operations);const first=s.operations.filter(r=>r.site_code==='DEMO-701');assert.equal(first.length,12);for(const camera of ['DEMO-701A','DEMO-701B'])assert.deepEqual(first.filter(r=>r.camera_code===camera).map(r=>r.data.op_batch).sort().reverse(),['202610','202608','202606','202604','202602','202512']);assert.equal(s.locations[0].data.loc_date,'2025-12-01');
+ for(const p of s.deployments)for(const f of p.fault_intervals){assert(f.start>=p.start_date);assert(f.end<=p.end_date);}
+ const map=new Map(),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};await ensureSampleData(storage,async()=>{});verify(JSON.parse(map.get(prefix+'operation-records')));assert.equal(JSON.parse(map.get(prefix+'location-records')).length,29);
+});
+test('existing browsers are rescheduled once, preserving user records, audit and user-supplied cycle facts',()=>{
+ const s=sampleRecords();const old=s.operations.map((r,i)=>({...r,operation_date:'2026-09-'+String(1+i).padStart(2,'0'),data:{...r.data,op_date:'2026-09-'+String(1+i).padStart(2,'0'),op_batch:'202610'}}));
+ const user={id:'mine',group:'山西',site_code:'USER',camera_code:'USER-A',operation_date:'2026-11-12',operation_type:'安装',is_deployed_after:true,data:{op_date:'2026-11-12',op_batch:'自定义批次'}};old.push(user);
+ const existing=deriveCycles(old);const first=existing.find(r=>r.start_operation_id==='sample-operation-0');first.fault_intervals=[{start:'2026-09-02',end:'2026-09-03',reason:'我的故障记录'}];first.first_recorded='2026-09-01T12:00:00';first.first_actual='2026-09-01T12:02:00';first.time_calibration={offset_seconds:120};
+ const userLocation={id:'mine-location',group:'山西',data:{loc_code:'USER',loc_date:'2026-11-12'}},audit=[{id:'audit'}];const map=new Map([[prefix+'location-records',JSON.stringify([...s.locations,userLocation])],[prefix+'operation-records',JSON.stringify(old)],[prefix+'deployment-records',JSON.stringify(existing)],[prefix+'camera-ledger-v1',JSON.stringify({operations:old,deployments:existing,audit})]]),storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)};
+ migrateDemoSchedule(storage);const next=JSON.parse(map.get(prefix+'camera-ledger-v1'));verify(next.operations.filter(r=>r.id!=='mine'));assert.deepEqual(next.operations.find(r=>r.id==='mine'),user);assert.deepEqual(next.audit,audit);assert.equal(next.operations.length,old.length);assert.deepEqual(next.operations,JSON.parse(map.get(prefix+'operation-records')));assert.deepEqual(next.deployments,JSON.parse(map.get(prefix+'deployment-records')));
+ const cycle=next.deployments.find(r=>r.id===first.id);assert.deepEqual(cycle.fault_intervals,first.fault_intervals);assert.deepEqual(cycle.time_calibration,first.time_calibration);assert.equal(cycle.first_recorded,first.first_recorded);assert(cycle.needs_review);assert.deepEqual(JSON.parse(map.get(prefix+'location-records')).find(r=>r.id===userLocation.id),userLocation);
+ const before=[...map];migrateDemoSchedule(storage);assert.deepEqual([...map],before);
+});

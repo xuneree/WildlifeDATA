@@ -13,7 +13,7 @@ test('empty, single, paired and withdrawn states',()=>{
 test('faults and card collection still mean physically present',()=>{
  for(const status of ['正常','关机','损坏'])assert.equal(presenceAfter({op_type:'检查',op_status:status,op_actions:['收卡换卡']}),true);
  assert.equal(presenceAfter({op_type:'检查',op_status:'丢失'}),false);
- assert.equal(presenceAfter({op_type:'检查',op_status:'丢失',op_actions:['丢失后补装']}),true);
+ assert.equal(presenceAfter({op_type:'检查',op_status:'丢失',op_actions:['丢失重补']}),true);
  assert.equal(presenceAfter({op_type:'安装'}),true);
  assert.equal(presenceAfter({op_type:'撤回'}),false);
  assert.equal(presenceAfter({op_type:'检查'}),null);

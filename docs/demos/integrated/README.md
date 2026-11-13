@@ -1,8 +1,8 @@
 # WildlifeDATA 三模块整合 Demo
 
-统一入口包含相机位点、物种识别、个体识别，另存于 `docs/demos/integrated`；三个独立 Demo 目录保持原样。
+统一入口包含相机位点、物种识别、个体识别，另存于 `docs/demos/integrated`；本轮仅同步独立 module01 及其整合快照，其他独立 Demo 沿用原实现。
 
-[可转发的公开体验链接](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [整合源码与可运行静态包](integrated-demo.zip)
+[可转发的公开体验链接](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [整合源码与可运行静态包](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/downloads/integrated-demo.zip)
 
 ## 运行
 
@@ -63,4 +63,8 @@ python3 -m http.server 5173 --directory dist
 
 ## 验证
 
-三模块共 64 项单元/业务测试通过；module02 和 module03 类型检查通过，四个构建均通过。整合浏览器检查覆盖导航、切换保留、位点完整信息、个体详情、真实 Excel 下载与重导、物种新增导入、刷新保留和手机导航；截图位于 `screenshots/`。验证结果不代表生产数据库、媒体服务或权限已接入。
+本轮三模块76项单元/业务测试通过（43＋20＋13）；module02 和 module03 类型检查通过，四个构建均通过。整合浏览器检查覆盖导航、切换保留、位点完整信息、个体详情、真实 Excel 下载与重导、物种新增导入、刷新保留和手机导航；另验证新版相机两月批次、10＋2分页、简化头部与返回、删除取消／失败重试／审计／周期和状态同步／跨页编辑防恢复；截图位于 `screenshots/`。验证结果不代表生产数据库、媒体服务或权限已接入。
+
+本轮 module01 来源为独立审阅 Sites 第22版（源码 `91e316f`），补齐 V4.2 字段、六位坐标、选填记录人员、两月批次、简化头部、相机统一筛选及操作删除。公开体验沿用本页原地址，`#/camera` 可直达更新后的相机管理。
+
+派生ZIP通过公开站点的 downloads 链接分发，GitHub保留完整源码、锁文件、测试及打包脚本；本地可运行上述命令重新生成相同功能的静态包。

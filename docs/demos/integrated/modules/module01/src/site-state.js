@@ -3,7 +3,7 @@ export function presenceAfter(data) {
   if (data.op_type === '安装') return true;
   if (data.op_type === '撤回') return false;
   if (data.op_type !== '检查') return null;
-  if (data.op_status === '丢失') return (data.op_actions || []).includes('丢失后补装');
+  if (data.op_status === '丢失') return (data.op_actions || []).some(v=>['丢失重补','丢失后补装'].includes(v));
   return data.op_status ? true : null;
 }
 

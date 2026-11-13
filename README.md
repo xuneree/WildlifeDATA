@@ -3,6 +3,8 @@
 继续已有任务前，先核对远端并读取 [协作约定](AGENTS.md) 和 [当前基线与交接](docs/PROJECT_STATUS.md)。
 
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
+
+[公开体验三模块 Demo](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [直接体验相机管理](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/#/camera) · [源码与运行说明](docs/demos/integrated/README.md)。module01 已同步最新确认的 V4.2 字段、两月批次、页面布局及操作删除；该 Demo 使用浏览器本地数据，正式应用状态见下文。
 最新总体需求为[需求 V1.4（工作组及指南同步版）](docs/requirements/platform-requirements-v1_4.md)，提供[总体需求 Word V1.4](docs/requirements/platform-requirements-v1_4.docx)。
 `docs/source` 仅保留创建项目时提供的原始文档；后续需求修订放在 `docs/requirements`，数据库设计修订放在 `docs/database`，交互及界面设计稿放在 `docs/design`。
 最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)及[Word](docs/database/wildlife_database_design_v1_5.docx)已同步[设计指南](docs/database/database_design_guide.md)及用户确认：工作组承担数据归属和人员管理，项目继承组权限；普通账号申请工作组及等级，工作/只读由组管理员审批，管理由系统管理员审批。新增生境历史、相机参数、坐标/下载控制及多段有效工作区间，保留维护、媒体独立拍摄标记和字段固定选项。

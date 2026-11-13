@@ -1,12 +1,13 @@
 import ExcelJS from 'exceljs';
 import {importSchemas} from './import-data.js';
 export async function templateBuffer(kind){
- const schema=importSchemas[kind],book=new ExcelJS.Workbook();const sheet=book.addWorksheet(schema.sheet);sheet.columns=schema.columns.map(c=>({header:c.title,key:c.key,width:c.type==='list'?28:20,style:{numFmt:c.type==='number'?'0.########':'@'}}));sheet.views=[{state:'frozen',ySplit:1}];sheet.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}};sheet.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1677FF'}};sheet.autoFilter={from:{row:1,column:1},to:{row:1,column:schema.columns.length}};
+ const schema=importSchemas[kind],book=new ExcelJS.Workbook();const sheet=book.addWorksheet(schema.sheet);sheet.columns=schema.columns.map(c=>({header:c.title,key:c.key,width:c.type==='list'?28:20,style:{numFmt:['loc_lon','loc_lat'].includes(c.key)?'0.000000':c.type==='number'?'0.########':'@'}}));sheet.views=[{state:'frozen',ySplit:1}];sheet.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}};sheet.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1677FF'}};sheet.autoFilter={from:{row:1,column:1},to:{row:1,column:schema.columns.length}};
  const notes=book.addWorksheet('填写说明');notes.columns=[{header:'字段',width:28},{header:'要求',width:100}];
  notes.addRow(['导入规则','在数据工作表填写记录；本表仅为说明，不导入。每批最多 1000 条；所有记录通过后整批写入，不覆盖已有记录。']);
  notes.addRow(['编号与日期','编号和网格按文本填写，保留前导零；日期填写 YYYY-MM-DD。多选项用“、”分隔。工作组由当前上下文带入。']);
+ if(kind==='locations')notes.addRow(['坐标精度','WGS84 十进制度，经纬度统一保留小数点后 6 位；超出部分四舍五入。']);
  if(kind==='locations')notes.addRow(['附件与状态','轨迹和照片请在位点中另行上传；在位状态由操作记录计算，不填写状态列。']);
- else{notes.addRow(['操作类型','安装：填写型号和条形码，拍摄参数可采用默认视频15秒、间隔10分钟、灵敏度中。检查/撤回：带入此前相机信息；操作人员、记录人员和现场状态必填。']);notes.addRow(['条件字段','检查的更换相机/丢失后补装可填写新型号与条形码，调整参数可填写新拍摄参数；选择其他时填写对应说明。撤回填写原因，不填操作内容。']);notes.addRow(['重复处理','相同位点、相机、日期、类型的操作视为同键冲突，需核对，不覆盖。先导入位点，再导入操作记录；操作导入后周期自动生成。']);}
+ else{notes.addRow(['操作类型','安装：填写相机型号（条形码选填），拍摄参数可采用默认视频15秒、间隔10秒、灵敏度中。检查/撤回：带入此前相机信息；操作人员和现场状态必填，记录人员选填。']);notes.addRow(['条件字段','检查的更换相机/丢失重补可填写新型号与条形码，参数调整可填写新拍摄参数；选择其他时填写对应说明。撤回填写原因，不填操作内容。']);notes.addRow(['重复处理','相同位点、相机、日期、类型的操作视为同键冲突，需核对，不覆盖。先导入位点，再导入操作记录；操作导入后周期自动生成。']);}
  for(const c of schema.columns)notes.addRow([c.title,`${c.required?'必填':'选填或按操作类型条件填写'}${c.options?'；选项：'+c.options.join('、'):''}${c.type==='number'&&c.min!==undefined?'；最小值 '+c.min:''}${c.type==='number'&&c.max!==undefined?'；最大值 '+c.max:''}`]);
  return book.xlsx.writeBuffer();
 }

@@ -1,10 +1,11 @@
 import JSZip from 'jszip';
+import {coordinate} from './field-v42.js';
 import {loadLocationFiles} from './files.js';
 const xml=value=>String(value??'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
 const safe=value=>String(value).replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').replace(/^\.+$/,'_');
 export function locationsKml(rows){return '<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>相机位点</name>'+rows.map(({data:d})=>{
- if(d.loc_lon==null||d.loc_lat==null||!Number.isFinite(Number(d.loc_lon))||!Number.isFinite(Number(d.loc_lat)))throw Error('位点 '+d.loc_code+' 缺少有效坐标，请先补全。');
- return '<Placemark><name>'+xml(d.loc_code)+'</name><description>'+xml([d.loc_region,d.loc_place,d.loc_alias].filter(Boolean).join(' · '))+'</description><Point><coordinates>'+Number(d.loc_lon)+','+Number(d.loc_lat)+','+Number(d.loc_elevation||0)+'</coordinates></Point></Placemark>';
+ if(coordinate(d.loc_lon)===null||coordinate(d.loc_lat)===null)throw Error('位点 '+d.loc_code+' 缺少有效坐标，请先补全。');
+ return '<Placemark><name>'+xml(d.loc_code)+'</name><description>'+xml([d.loc_region,d.loc_place,d.loc_alias].filter(Boolean).join(' · '))+'</description><Point><coordinates>'+coordinate(d.loc_lon)+','+coordinate(d.loc_lat)+','+Number(d.loc_elevation||0)+'</coordinates></Point></Placemark>';
 }).join('')+'</Document></kml>';}
 export async function exportSites(rows,types,format){
  if(!rows.length||!types.length)throw Error('请选择位点和导出内容。');
