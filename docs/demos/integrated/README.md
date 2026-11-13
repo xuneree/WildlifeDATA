@@ -2,7 +2,7 @@
 
 统一入口包含相机位点、物种识别、个体识别，另存于 `docs/demos/integrated`；三个独立 Demo 目录保持原样。
 
-[云端预览](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [整合源码与可运行静态包](integrated-demo.zip)
+[可转发的公开体验链接](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [整合源码与可运行静态包](integrated-demo.zip)
 
 ## 运行
 
@@ -57,7 +57,7 @@ python3 -m http.server 5173 --directory dist
 | `tests/integration.cjs` | 统一入口、模块切换、持久化、Excel 和手机端回归 |
 | `sources.json` | 来源分支、提交及合并口径 |
 
-本次从主分支 `8b21c51` 汇总全部远端分支。旧 `codex/module01-camera-management-demo` 由审阅版完整替代，合并时保留已确认实现；`fix/module02-ant-design` 已在主分支，保留原样；另外合入 `feat/module01-camera-management-review` 与 `codex/module03-individual-demo`。保留所有分支，不做删除或强制推送。
+本次从主分支 `8b21c51` 汇总全部远端分支。旧 `codex/module01-camera-management-demo` 由审阅版完整替代，合并时保留已确认实现；`fix/module02-ant-design` 已在主分支，保留原样；另外合入 `feat/module01-camera-management-review` 与 `codex/module03-individual-demo`。各分支提交已汇入 main；按用户要求清理已合并的远端分支，仅保留 main。来源分支名与 SHA 留在 sources.json 供追溯。
 
 依据仓库 AGENTS、Ant Design 使用基准、列表视觉与交互规范、三个模块 README、页面及数据库 guide；用户维护的 guide 保持原文。界面保留 module01 的 13px 中文/14px 编号日期分级，模块2、3使用已确认的数字记录布局。统一外框使用官方 Layout/Menu/Breadcrumb/Drawer/Tag/Button，组件视觉沿用 ConfigProvider，适配 CSS 仅处理重复外框。
 
