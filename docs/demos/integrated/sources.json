@@ -9,9 +9,8 @@
   "modules": {
     "module01": {
       "source": "docs/demos/module01",
-      "commit": "91e316feef63750044c78e524f93b1044c0f4ca6",
-      "review_site": "appgprj_6af4128b4d3c8191beea53edde2ac662",
-      "review_version": 22
+      "baseline_commit": "3e5ba8fbd512d1d3950992a199ed917ad6cadf56",
+      "confirmed_update": "2026-11-14: detail-only deletion, hide normal-status summary, visible A323 side PIR"
     },
     "module02": {
       "source": "docs/demos/module02",
