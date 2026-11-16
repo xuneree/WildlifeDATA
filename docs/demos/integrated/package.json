@@ -5,6 +5,7 @@
   "type": "module",
   "workspaces": [
     "modules/module01",
+    "modules/module02",
     "modules/module04",
     "modules/module05"
   ],

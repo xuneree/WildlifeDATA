@@ -6,6 +6,7 @@
 | --- | --- |
 | 总体需求 | [V1.4](platform-requirements-v1_4.md) |
 | 相机管理 | [V2.0](module01-camera-management-v2_0.md) |
+| 影像文件管理 | [V1.0](module02-media-management-v1_0.md) |
 | 物种识别 | [V1.0](module04-species-recognition-v1_0.md) |
 | 个体识别 | [V1.0](module05-individual-recognition-v1_0.md) |
 
@@ -30,7 +31,7 @@
 | 相机管理 | module01 / #/camera | 1 | 模块需求 V2.0及[交互说明](../design/module01-camera-management.md) |
 | 物种识别 | module04 / #/species | 4 | 模块需求 V1.0，含页面流转 |
 | 个体识别 | module05 / #/individual | 5 | 模块需求 V1.0，含页面流转 |
-| 影像文件管理 | 当前无本轮统一标识 | 2 | 总体需求，详细模块设计待推进 |
+| 影像文件管理 | module02 / #/media | 2 | [模块需求 V1.0](module02-media-management-v1_0.md)，目录关联与时间校准 |
 
 Demo、模块需求文件及整合快照统一采用 V1.4 功能模块序号；物种识别为 module04，个体识别为 module05。导航地址片段保持不变。
 
@@ -44,4 +45,4 @@ Demo、模块需求文件及整合快照统一采用 V1.4 功能模块序号；�
 | 数据/接口设计 | 正式开发前补稳定关系、校验、更正、事务、权限及文件访问；共用数据库设计，不每模块另造整套文档 |
 | 验证材料 | 测试和关键样例验证随实现维护，正式结果见[验证记录](../validation.md)；原型验证与正式验收分开 |
 
-按“模块需求和页面流转 → Demo → 已确认规则回写 → 正式数据/接口设计 → 开发验证”推进。当前三个 Demo 的交互范围已完成，正式后端、权限、媒体及跨模块关联尚未接入，详见[实施状态](../implementation.md)。
+按“模块需求和页面流转 → Demo → 已确认规则回写 → 正式数据/接口设计 → 开发验证”推进。相机、物种及个体识别的当前 Demo 范围已完成，影像模块已完成目录关联与时间校准原型，正式后端、权限、媒体及跨模块关联尚未接入，详见[实施状态](../implementation.md)。

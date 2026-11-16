@@ -21,6 +21,11 @@
       "source": "docs/demos/module05",
       "commit": "0bdc818c8d76d30aa8c9817d7dfbcfcd44ada22b",
       "source_at_commit": "docs/demos/module03"
+    },
+    "module02": {
+      "source": "docs/demos/module02",
+      "baseline_commit": "d724f77b0707201e6795460a879b404dd8d08032",
+      "scope": "回收批次目录关联、文件索引与周期时间校准；Ant Design 6.7.0"
     }
   },
   "merge_policy": "Reviewed module01 supersedes initial demo; preserve module04 and module05 behavior."

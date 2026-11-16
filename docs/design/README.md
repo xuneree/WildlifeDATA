@@ -9,6 +9,7 @@
 | 模块 | 业务与页面说明 | 原型 |
 | --- | --- | --- |
 | 相机管理 | [模块需求](../requirements/module01-camera-management-v2_0.md) · [交互说明](module01-camera-management.md) | [Demo](../demos/module01/README.md) |
+| 影像文件管理 | [模块需求及页面流转](../requirements/module02-media-management-v1_0.md) | [Demo](../demos/module02/README.md) |
 | 物种识别 | [模块需求及页面流转](../requirements/module04-species-recognition-v1_0.md) | [Demo](../demos/module04/README.md) |
 | 个体识别 | [模块需求及页面流转](../requirements/module05-individual-recognition-v1_0.md) | [Demo](../demos/module05/README.md) |
 

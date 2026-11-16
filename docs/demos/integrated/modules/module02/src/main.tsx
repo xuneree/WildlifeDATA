@@ -1,0 +1,12 @@
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {App,ConfigProvider} from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+import 'antd/dist/reset.css';
+import {MediaWorkspace} from './workspace';
+import {appTheme} from './theme';
+import './style.css';
+dayjs.locale('zh-cn');
+createRoot(document.getElementById('root')!).render(<React.StrictMode><ConfigProvider locale={zhCN} theme={{...appTheme,components:{...appTheme.components,Table:{cellFontSizeSM:13,cellPaddingBlockSM:8,cellPaddingInlineSM:12},Tag:{fontSizeSM:12}}}}><App><MediaWorkspace/></App></ConfigProvider></React.StrictMode>);

@@ -1,6 +1,6 @@
-# WildlifeDATA 三模块整合 Demo
+# WildlifeDATA 整合 Demo
 
-统一入口包含相机位点、物种识别、个体识别，另存于 `docs/demos/integrated`；模块标识按需求 V1.4 统一为 module01、module04、module05。
+统一入口包含相机位点、影像文件管理、物种识别、个体识别，另存于 `docs/demos/integrated`；模块标识按需求 V1.4 统一为 module01、module02、module04、module05。
 
 当前文档入口：[模块与维护分工](../../requirements/README.md)、[相机管理](../../requirements/module01-camera-management-v2_0.md)、[物种识别](../../requirements/module04-species-recognition-v1_0.md)、[个体识别](../../requirements/module05-individual-recognition-v1_0.md)。两类识别以记录为主，导入/历史是各自页内弹窗；本文及 `modules/` 内 README 记录快照实现与来源，不替代当前业务正文。模块目录、构建、工作区、来源映射及需求引用同步使用当前编号，历史来源分支和提交 SHA 保留。
 
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-访问 `http://localhost:5173`。`dev` 会先构建三个模块，再启动统一预览服务。修改源码后重新运行即可。也可直接构建、验证和打包：
+访问 `http://localhost:5173`。`dev` 会先构建四个模块，再启动统一预览服务。修改源码后重新运行即可。也可直接构建、验证和打包：
 
 ```bash
 npm test
@@ -35,6 +35,7 @@ python3 -m http.server 5173 --directory dist
 ## 内容和交互
 
 - 相机位点：保留确认后的 29 个演示位点、10 条分页、组合筛选、位点摘要/完整信息页、两步新增、调查历史、操作和自动周期、附件及 Excel 导入导出。
+- 影像文件管理：目录关联、实际文件修改时间索引、按稳定布设周期统一校准、异常提示和清单导出；入口 `#/media`。详细边界见[模块2 README](../module02/README.md)。
 - 物种识别：保留原 200 条样例、标签统计/映射、位点关联筛选、独立拍摄及 Excel 预检、导入和下载。
 - 个体识别：保留新版 Excel 的 36 条记录、九项筛选、CS 复核信息、字段分组详情以及原始 26 字段和复核信息的导入下载。
 
@@ -55,7 +56,7 @@ python3 -m http.server 5173 --directory dist
 | `modules/module01` | 相机位点管理及四类已确认表单 |
 | `modules/module04` | 物种识别 |
 | `modules/module05` | 个体识别及原始 Excel 测试样例 |
-| `scripts/build.mjs`、`package.mjs` | 一次构建三个模块、打包统一静态站点 |
+| `scripts/build.mjs`、`package.mjs` | 一次构建四个模块、打包统一静态站点 |
 | `tests/integration.cjs` | 统一入口、模块切换、持久化、Excel 和手机端回归 |
 | `sources.json` | 来源分支、提交及合并口径 |
 
@@ -65,7 +66,9 @@ python3 -m http.server 5173 --directory dist
 
 ## 验证
 
-本轮三模块76项单元/业务测试通过（43＋20＋13）；module04 和 module05 类型检查通过，四个构建均通过。整合浏览器检查覆盖导航、切换保留、位点完整信息、个体详情、真实 Excel 下载与重导、物种新增导入、刷新保留和手机导航；另验证新版相机两月批次、10＋2分页、简化头部与返回、删除取消／失败重试／审计／周期和状态同步／跨页编辑防恢复；本轮另验证列表不显示删除／“无问题”、固定可见的A323侧边PIR以及详情内删除；截图位于 `screenshots/`。验证结果不代表生产数据库、媒体服务或权限已接入。
+基于 main `d724f77`，四模块 90 项模型/业务测试通过（43＋14＋20＋13），独立模块2及统一构建通过。模块2浏览器检查覆盖真实目录选择、修改时间保留、防重、校准预览/写入/取消、存储失败重试、按筛选导出和手机布局；整合检查核对相机稳定周期 ID、模块切换保留及手机导航。既有整合回归覆盖相机完整信息、物种/个体详情、真实 Excel 下载重导、导入、刷新和手机导航。关键页面截图在 `screenshots/`，模块2完整流程截图在[独立 Demo](../module02/screenshots)。
+
+模块2沿用官方 Ant Design 6.7.0 的 Layout、Table、Form、Drawer、Upload、Steps 及主题；核对记录见[模块2 README](../module02/README.md)。目录索引及校准保存在浏览器，不代表正式媒体/NAS、权限或相机台账双向同步已完成。此次新增导航尚未部署到上方公开地址。
 
 当前 module01 以 GitHub main 为准，本次基于 `3e5ba8f` 增量调整，补齐 V4.2 字段、六位坐标、选填记录人员、两月批次、简化头部、相机统一筛选及详情内删除；列表隐藏删除和“无问题”，参数区固定展示A323侧边PIR开关。公开体验沿用本页原地址，`#/camera` 可直达更新后的相机管理。
 
@@ -75,4 +78,4 @@ python3 -m http.server 5173 --directory dist
 
 物种识别使用 `module04`，个体识别使用 `module05`；浏览器存储键保留旧值，既有导航地址和公开体验地址保持不变。此轮更新 GitHub 源码与派生包，未重新部署公开站点。
 
-编号调整验证：三模块 76 项测试、两个识别模块类型检查及四个构建通过；浏览器验证已加载 `modules/module04`、`modules/module05`，导航切换、筛选保留、详情、Excel 下载重导、物种新增导入、刷新持久化和手机导航通过。独立版及整合快照业务源码一致，31 处改名后的 Markdown 链接有效。Ant Design 依赖、组件和主题保持原实现，桌面及手机截图核验通过；此轮截图在本地验证目录，既有截图继续反映相同业务布局。
+当前编号及导航验证：四模块 90 项测试、类型检查及整合构建通过；浏览器验证已加载 `modules/module04`、`modules/module05`，导航切换、筛选保留、详情、Excel 下载重导、物种新增导入、刷新持久化和手机导航通过。独立版及整合快照业务源码一致，31 处改名后的 Markdown 链接有效。Ant Design 依赖、组件和主题保持原实现，桌面及手机截图核验通过；此轮截图在本地验证目录，既有截图继续反映相同业务布局。
