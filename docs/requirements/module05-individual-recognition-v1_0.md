@@ -2,7 +2,7 @@
 
 V1.0 · 2026-11-16 · 当前业务与交互基准
 
-模块标识沿用 `module03`，对应 Demo 的 `#/individual`；总体需求原九模块表中的个体识别序号为 5。模块映射见[需求目录](README.md)。依据用户确认的新版 `个体识别数据样例.xlsx`、[总体需求](platform-requirements-v1_4.md)及截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module03/README.md)与[整合 Demo](../demos/integrated/README.md)整理。本文只维护 Markdown。
+模块标识为 `module05`，对应 Demo 的 `#/individual`；与总体需求 V1.4 功能表的个体识别序号 5 一致。模块映射见[需求目录](README.md)。依据用户确认的新版 `个体识别数据样例.xlsx`、[总体需求](platform-requirements-v1_4.md)及截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module05/README.md)与[整合 Demo](../demos/integrated/README.md)整理。本文只维护 Markdown。
 
 ## 1. 范围与页面定位
 
@@ -80,7 +80,7 @@ V1.0 · 2026-11-16 · 当前业务与交互基准
 | 导入失败及下载 | 错误整批不写；28 列保留编码、空值、时间和观察信息 |
 | 正式档案关联、更正、并发与权限 | 稳定匹配、明确建档、逐媒体差异确认、事务及审计，待后端接入验证 |
 
-Demo 已完成样例导入、九项筛选、记录、详情、导入/历史弹窗和下载，数据仅在当前浏览器；正式媒体、档案及权限未接入。样例来源、运行和既有测试结果见 [Demo README](../demos/module03/README.md)。
+Demo 已完成样例导入、九项筛选、记录、详情、导入/历史弹窗和下载，数据仅在当前浏览器；正式媒体、档案及权限未接入。样例来源、运行和既有测试结果见 [Demo README](../demos/module05/README.md)。
 
 待正式设计：源观察快照、未判定个体独立标记、日期级校正与完整时刻/时区的关系、媒体/档案稳定匹配及更正接口。不将这些接入事项写成已完成能力。
 

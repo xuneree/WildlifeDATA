@@ -12,14 +12,16 @@
       "baseline_commit": "3e5ba8fbd512d1d3950992a199ed917ad6cadf56",
       "confirmed_update": "2026-11-14: detail-only deletion, hide normal-status summary, visible A323 side PIR"
     },
-    "module02": {
-      "source": "docs/demos/module02",
-      "commit": "8b21c519b26fe9e91d4fd1d7c2befaf3e0314aac"
+    "module04": {
+      "source": "docs/demos/module04",
+      "commit": "8b21c519b26fe9e91d4fd1d7c2befaf3e0314aac",
+      "source_at_commit": "docs/demos/module02"
     },
-    "module03": {
-      "source": "docs/demos/module03",
-      "commit": "0bdc818c8d76d30aa8c9817d7dfbcfcd44ada22b"
+    "module05": {
+      "source": "docs/demos/module05",
+      "commit": "0bdc818c8d76d30aa8c9817d7dfbcfcd44ada22b",
+      "source_at_commit": "docs/demos/module03"
     }
   },
-  "merge_policy": "Reviewed module01 supersedes initial demo; preserve module02 and module03 behavior."
+  "merge_policy": "Reviewed module01 supersedes initial demo; preserve module04 and module05 behavior."
 }

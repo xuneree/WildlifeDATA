@@ -6,8 +6,8 @@
 | --- | --- |
 | 总体需求 | [V1.4](platform-requirements-v1_4.md) |
 | 相机管理 | [V2.0](module01-camera-management-v2_0.md) |
-| 物种识别 | [V1.0](module02-species-recognition-v1_0.md) |
-| 个体识别 | [V1.0](module03-individual-recognition-v1_0.md) |
+| 物种识别 | [V1.0](module04-species-recognition-v1_0.md) |
+| 个体识别 | [V1.0](module05-individual-recognition-v1_0.md) |
 
 数据库设计及其图件、评审放在 [../database](../database)；交互与视觉设计及其图件、评审放在 [../design](../design)。
 
@@ -25,14 +25,14 @@
 
 [总体需求第 2.1 节](platform-requirements-v1_4.md#21-按导航推进的模块与页面)维护全平台导航及页面关系。相机管理、影像文件管理、物种识别、个体识别、个体档案、查询与统计、工作组管理分别组织模块；账号申请及系统管理按角色提供入口。物种识别和个体识别独立导航，以记录为主，导入用页内弹窗，不设统一标签导入入口。
 
-| 导航业务 | 现有源码/Demo 标识 | 原九模块分期表序号 | 当前入口 |
+| 导航业务 | 现有源码/Demo 标识 | V1.4 功能模块序号 | 当前入口 |
 | --- | --- | --- | --- |
 | 相机管理 | module01 / #/camera | 1 | 模块需求 V2.0及[交互说明](../design/module01-camera-management.md) |
-| 物种识别 | module02 / #/species | 4 | 模块需求 V1.0，含页面流转 |
-| 个体识别 | module03 / #/individual | 5 | 模块需求 V1.0，含页面流转 |
+| 物种识别 | module04 / #/species | 4 | 模块需求 V1.0，含页面流转 |
+| 个体识别 | module05 / #/individual | 5 | 模块需求 V1.0，含页面流转 |
 | 影像文件管理 | 当前无本轮统一标识 | 2 | 总体需求，详细模块设计待推进 |
 
-导航顺序、历史功能序号和 Demo 标识分别记录，不将 module02 误称影像文件管理，也不因插入新菜单重命名已有目录。
+Demo、模块需求文件及整合快照统一采用 V1.4 功能模块序号；物种识别为 module04，个体识别为 module05。导航地址片段保持不变。
 
 ## 每模块的最小配套材料
 
