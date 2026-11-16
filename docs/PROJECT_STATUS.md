@@ -1,40 +1,34 @@
 # 项目当前状态
 
-更新：2026-11-14。新会话按用户提出的新任务开展，以下仅提供最新资料和进展。
+更新：2026-11-16。新会话按用户当次任务开展，以下只提供当前入口、进展与必要待办。
 
 ## 当前文档
 
 | 内容 | 入口 |
 | --- | --- |
-| 业务依据 | [数据库设计 guide](database/database_design_guide.md) · [使用场景](design/scenario.md) |
-| 总体需求 | [V1.4](requirements/platform-requirements-v1_4.md)（同目录含 Word） |
-| 数据库设计 | [V1.5](database/wildlife_database_design_v1_5.md)（同目录含 Word） |
-| 模块1需求 | [相机管理 V2.0](requirements/module01-camera-management-v2_0.md)（同目录含 Word） |
-| 模块1 demo | [说明、在线预览及源码](demos/module01/README.md)（相机位点管理完整演示；包含列表、完整信息、操作/自动周期及 Excel 导入） |
-| 模块2 demo | [物种识别：说明、在线预览及源码](demos/module02/README.md)（Excel 导入、列表、筛选和下载；独立原型） |
-| 模块3 demo | [个体识别：说明、在线预览及源码](demos/module03/README.md)（Excel 导入、列表、筛选和下载；独立原型） |
-| 三模块整合 Demo | [统一导航、运行与整合包](demos/integrated/README.md)（另存目录，原三个 Demo 保留） |
-| 正式实现 | [实施状态](implementation.md) · [验证记录](validation.md) |
+| 业务依据 | 用户维护的[数据库 guide](database/database_design_guide.md)及[使用场景](design/scenario.md)；已确认待同步规则见模块需求 |
+| 文档分工及模块映射 | [需求目录](requirements/README.md) |
+| 总体需求及导航 | [V1.4](requirements/platform-requirements-v1_4.md)（同源 Word）；导航和页面关系见第 2.1 节 |
+| 相机管理需求 | [V2.0](requirements/module01-camera-management-v2_0.md)（同源 Word）及[交互说明](design/module01-camera-management.md) |
+| 物种识别需求 | [V1.0](requirements/module02-species-recognition-v1_0.md)（含页面流转及同源 Word） |
+| 个体识别需求 | [V1.0](requirements/module03-individual-recognition-v1_0.md)（含页面流转及同源 Word） |
+| 相机管理 Demo | [说明、源码和预览](demos/module01/README.md) |
+| 物种识别 Demo | [说明、源码和预览](demos/module02/README.md) |
+| 个体识别 Demo | [说明、源码和预览](demos/module03/README.md) |
+| 整合 Demo | [统一导航、来源和运行](demos/integrated/README.md) · [公开体验](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) |
+| 数据库设计 | [V1.5 结构草案](database/wildlife_database_design_v1_5.md)（同源 Word），首页列明与当前业务的待衔接范围 |
+| 正式实现 | [实施状态](implementation.md)及[验证记录](validation.md) |
 
 ## 当前进展
 
-- module01 已同步用户最新审阅：V4.2 字段、六位坐标、选填记录人员、两月批次示例、详情与编辑头部、统一相机筛选及操作删除（入口放在详情）；列表隐藏“无问题”，参数区固定展示A323侧边PIR开关。独立源码和整合版使用同一确认实现，详情见 [module01 说明](demos/module01/README.md)。
-- 模块1统一称相机管理，包含位点信息、生境调查、操作记录、布设周期；旧 module01 资料已完整归档，后续以当前模块需求和 demo 源码开展。
-- [相机位点管理 Demo](demos/module01/README.md) 已完成列表、位点摘要/完整信息页、两步新增、调查历史、操作与自动周期、附件导出及 Excel 模板/预校验/整批导入；已部署[私有云端预览](https://wildlife-camera-review-20261111.golden-reed-8427.chatgpt.site)，用户已确认同步 GitHub。数据仍在当前浏览器，尚未接入正式后端。
-- 物种识别独立原型已使用 React 19 / Ant Design 6，实现 Excel 预检、列表、筛选和下载；正式应用仍为旧模型初版，尚未按最新设计升级。
+- 相机管理、物种识别、个体识别已完成当前范围的交互 Demo 并整合导航。数据在浏览器，正式后端、权限、媒体播放及跨模块稳定关联尚未按当前需求接入。
+- 三模块需求与总体需求已接收最新确认规则；物种按 Excel 推进，两个识别入口均以记录为主体，导入和历史用页内弹窗。具体规则及已确认/暂定/待设计边界集中在模块正文，Demo README 维护实现和验证说明。
+- 相机需求已同步 V4.2 字段、秒参数、六位坐标、可选记录人员、位点详情层次、自动周期、删除保留和位点/操作 Excel。物种与个体需求保留各自筛选、标签/复核及源观察规则，不将 Demo 防重键当正式契约。
+- 本轮对齐对象为文档及同源 Word，未修改 Demo/正式应用代码、执行迁移或重新部署。已有原型测试结果见各自 README；不把本轮文档检查写成已重新完成应用验收。
 
-- 个体识别独立原型已替换为新版 Excel 的 36 条有效记录和 26 个源字段，按数据库逻辑区分媒体、个体观察与复核；样例复核人补 CS、状态已复核，中文展示编码，导出保留源值并增加复核字段；筛选限用户指定九项，取消编号标签点选与额外筛选；正式媒体匹配及档案入库尚未接入。
+## 必要待办
 
-- 三模块已在 `docs/demos/integrated` 汇成统一工作台，保留各模块业务实现与持久化；支持一次构建、源码/静态包和桌面/手机导航。已合并全部模块分支并清理已合并远端分支，仅保留 main；[公开体验链接](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) 可直接转发。来源与合并口径见[整合说明](demos/integrated/README.md)。
-
-## 待同步
-
-- guide 中的位点手填状态描述待用户同步为操作推导；当前需求和数据库设计已按确认规则修订。
-- 表单已审阅规则与 guide/设计的其他差异见 [Demo 说明](demos/module01/README.md)。
-
-- 已确认 module02 使用 Excel 导入，独立拍摄空值为非独立拍摄；桌面筛选五列且拍摄时间一列、独立拍摄勾选位于记录工具栏，标签筛选项位于识别记录标题下方，不显示标签标题或位点数，人类标签在筛选中通过可维护映射归并为人类干扰、列表与下载保留具体标签，区域/小地名/项目通过位点关联（演示数据已获确认），回收批次导入兼容旧表头；总体需求现有 XMP 描述及正式入库规则待同步，建议文字见 [module02 说明](demos/module02/README.md#待同步与待确认)。
-
-- module01 本次 V4.2 新规则及操作删除已确认，待同步用户 guide 和正式需求／数据库设计；建议按 [module01 当前规则](demos/module01/README.md) 更新。
-- module01 已确认而待同步 guide 的当前交互、自动周期与摘要/完整信息层次见 [Demo 说明](demos/module01/README.md)及[列表视觉与交互规范](design/list-ui-guidelines.md)，用户维护的 guide 保持原文。
-
-- 已确认 module03 一期为 Excel 导入、列表、筛选、下载且与 module02 组件一致，采用本次新版表格，复核人统一补 CS，筛选仅区域/小地名/项目/位点/回收批次/拍摄时间/关键词/个体编号/复核状态，不加年龄、性别和标签点选；编码释义来自新表头，个体独立标记及日期级校正的正式入库规则待接入设计，建议文字见 [module03 说明](demos/module03/README.md)。
+- 用户维护的 guide 尚需补入各模块需求末尾的建议文字；这些规则已确认，不因 guide 未回写而退回旧描述。
+- 正式数据/接口设计需衔接相机 V4.2、别名、安装/检查/撤回、自动周期、保留历史的删除与媒体引用；故障和有效工作量、其余批量模板仍待落实。
+- 物种 Excel 的稳定匹配、人员/非动物标签、映射权限、更正事务，以及个体源观察、日期级校正、独立标记和档案匹配仍待正式设计。XMP 范围另行确认，不列为当前必验功能。
+- 后续按导航逐模块推进；影像文件管理、个体档案、查询统计和工作组/系统管理的详细设计尚未完成。权限、稳定 ID 和跨模块关系在正式开发前共同核对。

@@ -1,6 +1,6 @@
 # module02 · 物种识别 Demo
 
-本目录是独立交互原型。依据本次用户确认的“Excel 导入、列表查看、筛选和下载”范围、[Ant Design 使用基准](../../design/ant-design.md)及附件 `物种识别数据样例.xlsx` 制作。业务对象参考[总体需求 V1.4](../../requirements/platform-requirements-v1_4.md)、[数据库设计 guide](../../database/database_design_guide.md)和[数据库设计 V1.5](../../database/wildlife_database_design_v1_5.md)。没有新建需求版本；本次源码基于主仓库 `1f9838a`，后续修改由 Git 提交区分。
+本目录是独立交互原型，原实现依据已确认的 Excel 样例和[Ant Design 基准](../../design/ant-design.md)，源码最初基于 `1f9838a`。当前业务及页面流转已集中到[物种识别需求 V1.0](../../requirements/module02-species-recognition-v1_0.md)，平台规则见[总体需求](../../requirements/platform-requirements-v1_4.md)。本文维护实现、样例、运行和既有验证；本次对齐不改 Demo 源码、ZIP 或部署。
 
 [在线预览](https://wildlife-module02-demo.golden-reed-8427.chatgpt.site) · [源码 ZIP](module02-demo.zip)
 
@@ -79,7 +79,7 @@ TypeScript 检查与 Vite 生产构建通过，20 项数据测试通过，覆盖
 
 ## 待同步与待确认
 
-已确认：本次一期 Demo 采用 Excel，区域/小地名/项目通过位点关联并先使用独立的演示目录，导入表格中的独立拍摄空值表示非独立拍摄。正式接入时，此 Excel 来源的空值应映射为非独立拍摄（FALSE），保留原始输入用于追溯；不据此改变其他来源中 NULL 的含义。总体需求 V1.4 的物种导入仍写 XMP，本次不回退用户最新要求，也不直接修改用户维护的 guide。建议用户同步的文字：
+已确认的 Excel、记录主页面、导入/历史弹窗和本来源独立拍摄空值口径已写入[模块需求](../../requirements/module02-species-recognition-v1_0.md)，并同步总体需求；XMP 范围另行确认。当前业务与暂定入库契约的界限见该需求第 3—5 节。用户维护的 guide 保持原文，建议同步的文字：
 
 > module02 物种识别一期先支持 Excel 导入已有识别结果，按样例提供列表查看、组合筛选和 Excel 下载；XMP 接入范围另行确认。Excel 中独立拍摄为 1 表示独立拍摄，0 或空值均表示非独立拍摄；筛选按业务关系分组，独立拍摄使用“仅独立拍摄”勾选项。列表标题只展示识别记录数，不展示位点数；标题下方、表格上方仅显示标签筛选项，不设物种标签标题或标签总数；点击标签进一步筛选列表，可切换或清除。人类相关标签通过可维护映射在筛选中归并为“人类干扰”，列表及下载保留具体标签。桌面筛选五列，拍摄时间占一列，“仅独立拍摄”位于记录工具栏。界面统一使用“物种标签”“位点”“拍摄时间”“回收批次”；模板采用新表头，导入兼容旧表头“回收时段”。区域、小地名和项目通过位点关联，其中一个位点可关联多个项目。
 
