@@ -36,7 +36,7 @@ jobs:
       - run: npm ci --prefix frontend --no-audit --no-fund
       - run: npm run build --prefix frontend
 
-  module02-demo:
+  module04-demo:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-          cache-dependency-path: docs/demos/module02/package-lock.json
-      - run: npm ci --prefix docs/demos/module02 --no-audit --no-fund
-      - run: npm test --prefix docs/demos/module02
-      - run: npm run build --prefix docs/demos/module02
+          cache-dependency-path: docs/demos/module04/package-lock.json
+      - run: npm ci --prefix docs/demos/module04 --no-audit --no-fund
+      - run: npm test --prefix docs/demos/module04
+      - run: npm run build --prefix docs/demos/module04

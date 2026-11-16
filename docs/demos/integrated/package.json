@@ -5,8 +5,8 @@
   "type": "module",
   "workspaces": [
     "modules/module01",
-    "modules/module02",
-    "modules/module03"
+    "modules/module04",
+    "modules/module05"
   ],
   "scripts": {
     "dev": "npm run build && vite preview --host 0.0.0.0 --port 5173",

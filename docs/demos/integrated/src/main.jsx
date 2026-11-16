@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';
 import {App,ConfigProvider,Layout,Menu,Breadcrumb,Button,Tag,Grid,Drawer} from 'antd';import zhCN from 'antd/locale/zh_CN';import {CameraOutlined,TagsOutlined,TeamOutlined,MenuFoldOutlined,MenuUnfoldOutlined} from '@ant-design/icons';import 'antd/dist/reset.css';import './style.css';
-const modules=[{key:'camera',name:'相机位点',folder:'module01',icon:<CameraOutlined/>},{key:'species',name:'物种识别',folder:'module02',icon:<TagsOutlined/>},{key:'individual',name:'个体识别',folder:'module03',icon:<TeamOutlined/>}];
+const modules=[{key:'camera',name:'相机位点',folder:'module01',icon:<CameraOutlined/>},{key:'species',name:'物种识别',folder:'module04',icon:<TagsOutlined/>},{key:'individual',name:'个体识别',folder:'module05',icon:<TeamOutlined/>}];
 function selectedRoute(){const key=location.hash.replace(/^#\/?/,'');return modules.some(m=>m.key===key)?key:'camera';}
 function Workspace(){const [active,setActive]=useState(selectedRoute),[visited,setVisited]=useState(()=>new Set([selectedRoute()])),[collapsed,setCollapsed]=useState(false),[mobileOpen,setMobileOpen]=useState(false);const screens=Grid.useBreakpoint(),mobile=screens.md===false,current=modules.find(m=>m.key===active);
 useEffect(()=>{const update=()=>{const key=selectedRoute();setVisited(old=>new Set([...old,key]));setActive(key);setMobileOpen(false);};addEventListener('hashchange',update);if(!location.hash)history.replaceState(null,'','#/camera');return()=>removeEventListener('hashchange',update);},[]);

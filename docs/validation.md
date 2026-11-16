@@ -11,6 +11,6 @@
 
 ## 应用与原型验证边界
 
-本轮只做文档清理，没有重新运行应用测试或线上浏览器验收。三个 Demo 的既有样例、测试及验证范围分别见[相机管理](demos/module01/README.md)、[物种识别](demos/module02/README.md)、[个体识别](demos/module03/README.md)和[整合说明](demos/integrated/README.md)。
+本轮只做文档清理，没有重新运行应用测试或线上浏览器验收。三个 Demo 的既有样例、测试及验证范围分别见[相机管理](demos/module01/README.md)、[物种识别](demos/module04/README.md)、[个体识别](demos/module05/README.md)和[整合说明](demos/integrated/README.md)。
 
 正式接口、工作组权限、媒体服务、跨模块稳定 ID、并发事务以及 Dell/WSL2/NAS 真实数据验收仍按[实施状态](implementation.md)推进。历史验证及当时环境差异见[归档索引](archive/README.md)，不把旧实例信息当作当前环境事实。

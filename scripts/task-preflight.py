@@ -13,7 +13,7 @@ def git(*args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--target', required=True, help='实际修改对象，如 docs/demos/module02')
+    parser.add_argument('--target', required=True, help='实际修改对象，如 docs/demos/module04')
     parser.add_argument('--ui', action='store_true', help='加入界面任务的设计基准检查')
     parser.add_argument('--read', action='append', default=[], help='本次需求或 guide 路径，可重复')
     args = parser.parse_args()

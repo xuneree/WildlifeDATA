@@ -1,9 +1,9 @@
-# 物种识别整合源码快照
+# 个体识别整合源码快照
 
 本目录是整合 Demo 的构建输入，保留独立模块的业务代码，不重复维护业务说明。
 
-- 当前业务与页面流转：[模块需求](../../../../requirements/module02-species-recognition-v1_0.md)。
-- 样例、字段解释及既有验证：[独立模块说明](../../../module02/README.md)。
+- 当前业务与页面流转：[模块需求](../../../../requirements/module05-individual-recognition-v1_0.md)。
+- 样例、字段解释及既有验证：[独立模块说明](../../../module05/README.md)。
 - 统一运行、构建、发布边界：[整合 Demo 说明](../../README.md)。
 - 快照来源与提交：[sources.json](../../sources.json)。
 

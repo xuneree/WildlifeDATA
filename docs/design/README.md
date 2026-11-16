@@ -9,8 +9,8 @@
 | 模块 | 业务与页面说明 | 原型 |
 | --- | --- | --- |
 | 相机管理 | [模块需求](../requirements/module01-camera-management-v2_0.md) · [交互说明](module01-camera-management.md) | [Demo](../demos/module01/README.md) |
-| 物种识别 | [模块需求及页面流转](../requirements/module02-species-recognition-v1_0.md) | [Demo](../demos/module02/README.md) |
-| 个体识别 | [模块需求及页面流转](../requirements/module03-individual-recognition-v1_0.md) | [Demo](../demos/module03/README.md) |
+| 物种识别 | [模块需求及页面流转](../requirements/module04-species-recognition-v1_0.md) | [Demo](../demos/module04/README.md) |
+| 个体识别 | [模块需求及页面流转](../requirements/module05-individual-recognition-v1_0.md) | [Demo](../demos/module05/README.md) |
 
 识别记录是物种/个体识别页面主体，详情用抽屉，导入及历史用本模块弹窗。简单流转直接在模块需求维护，不为文件齐全重复建交互稿。
 
