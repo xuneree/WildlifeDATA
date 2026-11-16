@@ -24,6 +24,6 @@
 - Chromium + Playwright 实际浏览器联调通过：位点新增/编辑/点位示意、周期新增/纠错/详情、上海时区往返、无效时间反馈、筛选重置、统计、分页、只读账号、坐标隐藏、390px 窄屏；无浏览器 JavaScript 异常。
 - 浏览器测试使用独立随机数据库和合成数据，测试后删除临时库并停止测试 API/Vite；不清空业务数据库。
 - Docker Compose 更新构建成功，数据库/API/Web 均通过 readiness；经 Nginx 的只读 smoke 验证通过。
-- 已将独立数据库浏览器回归步骤加入 GitHub Actions 配置；本轮未推送或触发远端 Actions，不能视为远端执行通过。
+- 已将独立数据库浏览器回归步骤加入 GitHub Actions 配置；交付分支已推送；远端结果以 Actions 页面为准，本地通过不代表远端已通过。
 - `scripts/test-camera-ui.py` 可重复执行，截图和日志位于被忽略的 work/；运行方式见 camera-management.md。
 - 尚需 Dell WSL2 上的真实巡检数据验收。GIS 底图和扣除停机的有效工作日未纳入 §3.1 完成声明；当前分别提供当前页经纬度示意图、带明确口径的周期时长。

@@ -52,4 +52,4 @@ npm run build --prefix frontend
 python3 scripts/test-camera-ui.py --env-file /workspace/.wildlife-data.env
 ```
 
-本地可使用 .env 文件；CI 可直接设置 TEST_DATABASE_URL。GitHub Actions 已配置 Playwright 1.62.0 和 Chromium 执行此脚本；本轮未触发远端运行。测试结果和合成测试数据截图写入 work/，不提交业务凭据。浏览器用例覆盖新增/编辑/详情、筛选与重置、分页、时区往返、无效时间提示、统计、只读账号、坐标隐藏、窄屏及浏览器异常。
+本地可使用 .env 文件；CI 可直接设置 TEST_DATABASE_URL。GitHub Actions 已配置 Playwright 1.62.0 和 Chromium 执行此脚本；已推送交付分支，远端执行结果以 GitHub Actions 页面为准。测试结果和合成测试数据截图写入 work/，不提交业务凭据。浏览器用例覆盖新增/编辑/详情、筛选与重置、分页、时区往返、无效时间提示、统计、只读账号、坐标隐藏、窄屏及浏览器异常。
