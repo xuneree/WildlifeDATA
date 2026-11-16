@@ -2,6 +2,8 @@
 
 已确认的浏览器交互原型，包含位点信息、生境调查、操作记录和自动布设周期。基于 React 18 / Ant Design 5，工作组固定山西；数据保存在当前浏览器，尚未接入正式权限、数据库或媒体服务。
 
+当前业务基准：[相机管理需求 V2.0](../../requirements/module01-camera-management-v2_0.md)；页面层次见[交互说明](../../design/module01-camera-management.md)。本文记录原型实现、样例、运行和既有验证，已确认业务以需求正文为入口；本次文档对齐不改 Demo 源码、ZIP 或部署。
+
 [三模块公开体验](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/#/camera) · [独立审阅预览](https://wildlife-camera-review-20261111.golden-reed-8427.chatgpt.site) · [源码与单文件演示包](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/downloads/module01-demo.zip)
 
 ## 运行与交付
@@ -69,4 +71,4 @@ Excel导入支持位点和操作记录：模板下载、真实XLSX读取、条�
 
 43项单元测试及独立浏览器检查已覆盖字段保存、六位坐标、条件配置、数据迁移、示例批次、删除与失败重试、审计、周期、状态、分页、返回和桌面／手机布局；整合环境另做构建与浏览器回归。验证不代表正式后端事务、真实权限或跨设备同步已实现。
 
-用户维护的 guide 保持原文。建议同步的已确认规则就是本文“当前字段与条件规则”“周期、状态与删除”和“示例、导入和导出”；正式需求Word及数据库设计尚未按本轮全部变化修订，不能将本次原型同步视为正式前后端完成。
+用户维护的 guide 保持原文，建议补入的文字及正式待设计事项见[模块需求](../../requirements/module01-camera-management-v2_0.md#当前基线与待同步)。已确认 V4.2、页面层次、自动周期、删除保留和位点/操作 Excel 已对齐需求及 Word；数据库结构与媒体引用下的更正、权限仍待接入，不将浏览器删除/重算当作正式硬删除方案。

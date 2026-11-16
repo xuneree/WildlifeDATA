@@ -2,6 +2,8 @@
 
 统一入口包含相机位点、物种识别、个体识别，另存于 `docs/demos/integrated`；本轮仅同步独立 module01 及其整合快照，其他独立 Demo 沿用原实现。
 
+当前文档入口：[模块与维护分工](../../requirements/README.md)、[相机管理](../../requirements/module01-camera-management-v2_0.md)、[物种识别](../../requirements/module02-species-recognition-v1_0.md)、[个体识别](../../requirements/module03-individual-recognition-v1_0.md)。两类识别以记录为主，导入/历史是各自页内弹窗；本文及 `modules/` 内 README 记录快照实现与来源，不替代当前业务正文。本次只对齐文档，保留源码、来源 SHA、既有验证和派生 ZIP，不重新部署。
+
 [可转发的公开体验链接](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [整合源码与可运行静态包](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/downloads/integrated-demo.zip)
 
 ## 运行

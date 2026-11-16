@@ -1,5 +1,7 @@
 # module03 · 个体识别 Demo
 
+当前业务与页面流转见[个体识别需求 V1.0](../../requirements/module03-individual-recognition-v1_0.md)。本文保留原型来源、样例、字段解释、运行和既有验证；已确认规则以需求正文为入口，正式源观察/日期校正/档案映射仍待设计。本次文档对齐不改 Demo 源码、ZIP 或部署。
+
 依据本次用户提供的新版 `个体识别数据样例.xlsx`，替换初始样例并按数据库字段逻辑整理。修改基于本地 `c750f49`，远端基线 `8b21c51`；遵守 [数据库设计 guide](../../database/database_design_guide.md)、[数据库设计 V1.5](../../database/wildlife_database_design_v1_5.md) 第 6、7、12、13 节及[总体需求 V1.4](../../requirements/platform-requirements-v1_4.md)。保留 [module02](../module02/README.md) 的 Ant Design 主题、组件与交互。原型不是正式后端入库实现。
 
 [在线预览](https://wildlife-module03-individual-demo.golden-reed-8427.chatgpt.site) · [源码 ZIP](module03-demo.zip)
@@ -72,9 +74,9 @@ Chromium 验证了仅 9 项筛选、无编号点选/独立勾选、区域/项目
 
 设计符合性：同款 `ConfigProvider`、中文 locale、Ant Design `App` 上下文与 `src/theme.ts`；Layout/Menu/Breadcrumb、Form/Select/DatePicker、Table、Drawer/Descriptions、Upload/Steps/Modal/Result 复用既有方式；位点关联复用 module02 已有逻辑，并通过类型检查。业务 CSS 只控制栅格和布局，没有覆盖组件内部样式。产品内不展示数据库字段名、评审过程或开发边界。
 
-## 待同步与正式接入
+## guide 待同步与正式接入
 
-已确认的新规则建议由用户同步到 guide：
+已确认记录主页面、九项筛选、轻量弹窗及源观察规则已对齐[模块需求](../../requirements/module03-individual-recognition-v1_0.md)和总体需求。guide 仍由用户维护，建议补入：
 
 > module03 个体识别一期使用本次新版 Excel 作为样例；其中“个体编号复核”是复核后的编号，样例未列复核人，统一补 CS，识别人保持原文。保留原始与校正后日期、复核备注及所有观察字段；与 module02 组件和交互保持一致；筛选仅区域、小地名、项目、位点、回收批次、拍摄时间、关键词、个体编号、复核状态，不加年龄/性别或个体标签点选筛选。桌面第二行个体编号、复核状态各占一列，关键词两列，剩余留空。详情中区域、小地名、项目、位点、相机编号集中于“位点信息”，各分组字段名与内容列宽比例一致。
 
