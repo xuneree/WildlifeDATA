@@ -2,15 +2,15 @@
 
 V1.3 · 2026-10-16 · 平台业务框架与功能分期修订版
 
-本版依据用户提供的业务逻辑图与九项功能模块整理，作为全平台最新需求基线。模块 01 已确认细节继续遵循[位点与回收详细需求 V1.1](01-camera-sites-and-retrieval.md)，数据库对应[设计 V1.4](../database/wildlife_database_design_v1_4.md)。[总体需求 Word V1.3](platform-requirements-v1_3.docx)与本文件同存于 `docs/requirements`；`docs/source` 保留项目创建时提供的原始 V1.2 文档，仅供追溯，后续修订不覆盖原始资料。本文描述建设目标，不表示功能已经实现。
+本版依据用户提供的业务逻辑图与九项功能模块整理，作为全平台最新需求基线。模块 01 已确认细节继续遵循[位点与回收详细需求 V1.1](01-camera-sites-and-retrieval.md)，数据库对应[设计 V1.4](../database/wildlife_database_design_v1_4.md)。[总体需求 Word V1.3](https://github.com/xuneree/WildlifeDATA/blob/6b6dce785616f9b7244914a90a70a9dc365d12d6/docs/requirements/platform-requirements-v1_3.docx)与本文件同存于 `docs/requirements`；`docs/source` 保留项目创建时提供的原始 V1.2 文档，仅供追溯，后续修订不覆盖原始资料。本文描述建设目标，不表示功能已经实现。
 
 ## 1. 项目目标与业务逻辑
 
 面向多区域野生动物监测，以红外相机影像为基础，统一组织位点、工作与回收周期、NAS 影像、物种标签、豹个体标签及长期档案，形成可查询、可追溯的数据链路。二期扩展人工个体标注、繁殖记录、可视化与报告。
 
-![平台业务逻辑与功能分期](platform-business-framework-v1_3.png)
+![平台业务逻辑与功能分期](https://raw.githubusercontent.com/xuneree/WildlifeDATA/0910e89418b467a12f0d1d457d181cca645ee254/docs/requirements/platform-business-framework-v1_3.png)
 
-图 1：根据用户提供的业务逻辑图重绘，保留模块、连线和分期；[矢量图](platform-business-framework-v1_3.svg)。蓝色实线框为一期，绿色虚线框为二期，灰色虚线框为待定。原图中个体标注工具使用黄色，本图同样保留。流程箭头表示业务衔接与数据使用，不要求所有查询必须先完成个体标注。
+图 1：根据用户提供的业务逻辑图重绘，保留模块、连线和分期；[矢量图](https://github.com/xuneree/WildlifeDATA/blob/0910e89418b467a12f0d1d457d181cca645ee254/docs/requirements/platform-business-framework-v1_3.svg)。蓝色实线框为一期，绿色虚线框为二期，灰色虚线框为待定。原图中个体标注工具使用黄色，本图同样保留。流程箭头表示业务衔接与数据使用，不要求所有查询必须先完成个体标注。
 
 核心链路：位点与回收记录 → 影像文件管理 → 物种标签导入 → 个体标签导入 → 个体档案管理 → 数据查询与统计。位点、回收、影像和物种数据可直接进入查询统计；二期个体标注工具与一期导入共用个体数据，繁殖记录及报告沿用该基础。素材库从影像管理扩展，建设时间待定。
 

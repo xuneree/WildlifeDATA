@@ -4,7 +4,7 @@ V1.0 · 2026-11-16 · 当前业务与交互基准
 
 模块标识沿用 `module02`，对应 Demo 的 `#/species`；总体需求原九模块表中的物种识别序号为 4。序号、导航顺序与源码标识的关系见[需求目录](README.md)，不据此重命名媒体模块。
 
-依据用户已确认的 Excel 样例、[总体需求](platform-requirements-v1_4.md)和截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module02/README.md)及[整合 Demo](../demos/integrated/README.md)整理。本文接收已确认规则；原型暂定的唯一键、必填性和正式字段映射仍在下文单列，不因 Demo 已实现就视为业务确认。[Word](module02-species-recognition-v1_0.docx)由本文生成。
+依据用户已确认的 Excel 样例、[总体需求](platform-requirements-v1_4.md)和截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module02/README.md)及[整合 Demo](../demos/integrated/README.md)整理。本文接收已确认规则；原型暂定的唯一键、必填性和正式字段映射仍在下文单列，不因 Demo 已实现就视为业务确认。本文只维护 Markdown。
 
 ## 1. 范围与页面定位
 

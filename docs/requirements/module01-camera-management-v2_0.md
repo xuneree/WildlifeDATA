@@ -1,12 +1,12 @@
 # 模块1-相机管理
 
-版本：V2.0 · 对齐日期：2026-11-16。状态：当前模块业务与交互基准，小修订由 Git 区分。[Word](module01-camera-management-v2_0.docx)由本文生成。
+版本：V2.0 · 对齐日期：2026-11-16。状态：当前模块业务与交互基准，小修订由 Git 区分，只维护 Markdown。
 
 模块代码为 `module01`，对外统一称“模块1-相机管理”。包含位点信息、生境调查、操作记录、布设周期四类业务内容，不要求四者各占一级导航；当前入口以位点列表与详情组织。“操作记录”记录现场操作，不等同于系统审计日志。模块映射见[需求目录](README.md)。
 
 ## 依据与范围
 
-依据用户确认的 V4.2 野外表单与后续审阅规则、[数据库 guide](../database/database_design_guide.md)、[使用场景](../design/scenario.md)，并对齐源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 中的[当前 Demo](../demos/module01/README.md)。本版替代旧模块需求及低保真交互稿；[旧资料完整归档](../archive/module01-legacy/README.md)。已确认新规则优先于旧文档冲突描述，guide 由用户维护。
+依据用户确认的 V4.2 野外表单与后续审阅规则、[数据库 guide](../database/database_design_guide.md)、[使用场景](../design/scenario.md)，并对齐源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 中的[当前 Demo](../demos/module01/README.md)。本版替代旧模块需求及低保真交互稿；[旧资料统一归档](../archive/README.md)。已确认新规则优先于旧文档冲突描述，guide 由用户维护。
 
 目标闭环：建立位点 → 按需调查生境 → 记录安装/检查/撤回 → 核对布设周期、故障与时间校准 → 为媒体归属和后续统计提供依据。当前 Demo 是独立浏览器原型，正式前端、后端及迁移仍待实现。
 
@@ -126,7 +126,7 @@ Excel 已在当前 Demo 支持位点和操作：模板下载、真实 XLSX 读�
 
 ## 当前基线与待同步
 
-[Demo 源码、运行和验证边界](../demos/module01/README.md) · [交互说明](../design/module01-camera-management.md) · [总体需求 V1.4](platform-requirements-v1_4.md)。本需求的 Word 由本 Markdown 生成。
+[Demo 源码、运行和验证边界](../demos/module01/README.md) · [交互说明](../design/module01-camera-management.md) · [总体需求 V1.4](platform-requirements-v1_4.md)。
 
 建议用户补入 guide：相机管理入口按位点列表—详情—完整信息组织，保留四类业务内容；操作类型安装/检查/撤回、批次选填，在位状态由操作推导。坐标六位、记录人员选填，V4.2 参数以秒记录；周期自动生成，故障/校准按需填，不加人工确认字段。删除保留历史和审计，媒体不自动改挂；位点/操作 Excel 已有原型，其他模板待设计。具体规则引用本文，避免重复维护。
 

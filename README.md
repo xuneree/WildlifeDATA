@@ -5,9 +5,9 @@
 面向野生动物监测的第一期项目初版，采用 React + TypeScript、FastAPI、PostgreSQL + PostGIS、Docker Compose。
 
 [公开体验三模块 Demo](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [直接体验相机管理](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/#/camera) · [源码与运行说明](docs/demos/integrated/README.md)。module01 已同步最新确认的 V4.2 字段、两月批次、页面布局及操作删除；该 Demo 使用浏览器本地数据，正式应用状态见下文。
-最新总体需求为[需求 V1.4（工作组及指南同步版）](docs/requirements/platform-requirements-v1_4.md)，提供[总体需求 Word V1.4](docs/requirements/platform-requirements-v1_4.docx)。
-`docs/source` 仅保留创建项目时提供的原始文档；后续需求修订放在 `docs/requirements`，数据库设计修订放在 `docs/database`，交互及界面设计稿放在 `docs/design`。
-最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)及[Word](docs/database/wildlife_database_design_v1_5.docx)已同步[设计指南](docs/database/database_design_guide.md)及用户确认：工作组承担数据归属和人员管理，项目继承组权限；普通账号申请工作组及等级，工作/只读由组管理员审批，管理由系统管理员审批。新增生境历史、相机参数、坐标/下载控制及多段有效工作区间，保留维护、媒体独立拍摄标记和字段固定选项。
+最新总体需求为[需求 V1.4（工作组及指南同步版）](docs/requirements/platform-requirements-v1_4.md)，当前维护文档仅提供 Markdown。
+`docs/requirements`、`docs/database`、`docs/design` 只保留当前有效文档；历史版本、旧附件与旧原型集中到[归档目录](docs/archive/README.md)，原路径不留占位文件。`docs/source` 保留当前 V4.2 字段依据原表。
+最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)是待衔接当前模块业务的结构草案；工作组及权限基础依据[设计指南](docs/database/database_design_guide.md)及用户确认：工作组承担数据归属和人员管理，项目继承组权限；普通账号申请工作组及等级，工作/只读由组管理员审批，管理由系统管理员审批。新增生境历史、相机参数、坐标/下载控制及多段有效工作区间，保留维护、媒体独立拍摄标记和字段固定选项。
 
 一期设计包括工作组/项目、共享位点与机位、生境、维护及布设、影像、标签导入、豹/兔狲档案和查询统计；一期不含个体关系或实体相机库存。二期沿用人工个体标注、繁殖、可视化与报告规划；素材库和物种 AI 另定。
 
@@ -108,8 +108,8 @@ python3 scripts/test-backend.py --env-file /workspace/.wildlife-data.env
 ## 下一步
 
 具体功能状态、文档冲突与待验证事项见 [实施清单](docs/implementation.md)。
-下一阶段优先实现原始媒体索引与播放、XMP 和 Excel 导入，并用真实样例验证匹配规则与事务覆盖。
+后续按导航逐模块推进，正式接入原始媒体索引/播放及两类 Excel 识别结果，并用真实样例验证匹配与更正事务；XMP 范围另行确认。
 
 ## 模块1-相机管理
 
-包含位点信息、生境调查、操作记录、布设周期。后续以[需求 V2.0](docs/requirements/module01-camera-management-v2_0.md)和[最新 Demo 源码](docs/demos/module01/README.md)为基线；[旧模块资料](docs/archive/module01-legacy/README.md)仅供历史追溯。正式应用尚未按此基线升级。
+包含位点信息、生境调查、操作记录、布设周期。后续以[需求 V2.0](docs/requirements/module01-camera-management-v2_0.md)和[最新 Demo 源码](docs/demos/module01/README.md)为基线；[旧模块资料](docs/archive/README.md)仅供历史追溯。正式应用尚未按此基线升级。

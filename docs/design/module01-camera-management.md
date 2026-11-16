@@ -10,4 +10,4 @@
 
 字段、删除及周期规则只维护在需求正文。位点和操作 Excel 已有模板、预检、确认与结果交互；生境/周期批量模板及正式后端接入仍待设计。本次对齐不修改 UI 源码或部署。
 
-遵循[Ant Design 使用基准](ant-design.md)。界面只展示业务字段、必要校验和操作反馈，开发说明与评审信息留在文档中。旧[交互草案](../archive/module01-legacy/design/module01-interaction-v0_1.md)仅供追溯。
+遵循[Ant Design 使用基准](ant-design.md)。界面只展示业务字段、必要校验和操作反馈，开发说明与评审信息留在文档中。旧[交互草案](../archive/design/module01-interaction-v0_1.md)仅供追溯。

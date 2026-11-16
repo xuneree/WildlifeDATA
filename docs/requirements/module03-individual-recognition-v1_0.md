@@ -2,7 +2,7 @@
 
 V1.0 · 2026-11-16 · 当前业务与交互基准
 
-模块标识沿用 `module03`，对应 Demo 的 `#/individual`；总体需求原九模块表中的个体识别序号为 5。模块映射见[需求目录](README.md)。依据用户确认的新版 `个体识别数据样例.xlsx`、[总体需求](platform-requirements-v1_4.md)及截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module03/README.md)与[整合 Demo](../demos/integrated/README.md)整理。[Word](module03-individual-recognition-v1_0.docx)由本文生成。
+模块标识沿用 `module03`，对应 Demo 的 `#/individual`；总体需求原九模块表中的个体识别序号为 5。模块映射见[需求目录](README.md)。依据用户确认的新版 `个体识别数据样例.xlsx`、[总体需求](platform-requirements-v1_4.md)及截至源码提交 `15b448a17898f7f5efd47ff05ebccdeb96c91039` 的[独立 Demo](../demos/module03/README.md)与[整合 Demo](../demos/integrated/README.md)整理。本文只维护 Markdown。
 
 ## 1. 范围与页面定位
 
