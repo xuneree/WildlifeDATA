@@ -1,16 +1,13 @@
 # 业务需求文档
 
-本目录按需求归属集中保存总体需求、模块详细需求及相关评审意见、业务逻辑图。后续需求修订及配套图件继续放在这里，项目创建时提供的原始附件保留在 [../source](../source)。
+本目录只维护当前有效的总体与模块需求，格式为 Markdown。历史版本及评审见[统一归档](../archive/README.md)，原目录不保留占位文件。当前原始依据见[source](../source)。
 
 | 内容 | 文件 |
 | --- | --- |
-| 最新总体需求 | [V1.4 Markdown](platform-requirements-v1_4.md) · [V1.4 Word](platform-requirements-v1_4.docx) |
-| 历史总体需求 | [V1.3 Markdown](platform-requirements-v1_3.md) · [V1.3 Word](platform-requirements-v1_3.docx) |
-| 模块1-相机管理当前需求 | [V2.0 Markdown](module01-camera-management-v2_0.md) · [Word](module01-camera-management-v2_0.docx) |
-| 物种识别当前需求 | [V1.0 Markdown](module02-species-recognition-v1_0.md) · [Word](module02-species-recognition-v1_0.docx) |
-| 个体识别当前需求 | [V1.0 Markdown](module03-individual-recognition-v1_0.md) · [Word](module03-individual-recognition-v1_0.docx) |
-| 模块1历史资料 | [旧需求、评审及原型归档](../archive/module01-legacy/README.md) |
-| 平台业务逻辑图 | [PNG](platform-business-framework-v1_3.png) · [SVG](platform-business-framework-v1_3.svg) |
+| 总体需求 | [V1.4](platform-requirements-v1_4.md) |
+| 相机管理 | [V2.0](module01-camera-management-v2_0.md) |
+| 物种识别 | [V1.0](module02-species-recognition-v1_0.md) |
+| 个体识别 | [V1.0](module03-individual-recognition-v1_0.md) |
 
 数据库设计及其图件、评审放在 [../database](../database)；交互与视觉设计及其图件、评审放在 [../design](../design)。
 
@@ -22,9 +19,7 @@
 3. 交互说明和已确认 Demo 说明布局、入口出口、弹窗与抽屉；代码已实现不等于业务确认。暂定匹配键、演示数据和本地存储应标明边界，不能替代正式入库契约。
 4. 数据库/接口设计解释关系与约束，结构草案尚未衔接的事项明确列出；不以旧字段否定新业务，正式接入前完成设计及迁移验证。
 5. Demo README 维护运行、来源、样例、实现与验证限制，业务规则引用模块正文；PROJECT_STATUS 只维护当前入口、进展和必要待办。
-6. Markdown 为正文，Word 同源生成。小修订用 Git 区分，不每次同步另建版本；新建评审基线才升版本并同步入口。旧材料仅供追溯。
-
-当前总体、三模块及数据库适用范围说明的 Word 可在仓库根目录运行 `python3 scripts/render-current-docs.py` 重新生成（需要 Pandoc），沿用项目已有 Word 样式。
+6. 文档只维护 Markdown，不生成重复 Word。小修订用 Git 区分，新建评审基线才升版本；过期正文、原件及旧原型移动到统一归档，同步更新引用后删除原路径，不留迁移占位。原始附件保留其原格式，删除的重复派生文件仍可从 Git 历史恢复。
 
 ## 导航与模块标识
 

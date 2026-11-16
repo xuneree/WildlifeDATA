@@ -1,6 +1,6 @@
 # 模块 01：相机位点与数据回收详细需求
 
-2026-11-06 适用说明：本文件 V1.1 保留为历史详细需求。最新以[需求 V1.4](platform-requirements-v1_4.md)、[数据库 V1.5](../database/wildlife_database_design_v1_5.md)和[设计指南](../database/database_design_guide.md)为准；两级区域、项目授权、维护日期及周期边界、删除、回收统计、单段工作量等冲突规则已被新设计替代。新增生境历史、维护后参数、多段工作区间及工作组审批按新文档执行。
+2026-11-06 适用说明：本文件 V1.1 保留为历史详细需求。最新以[需求 V1.4](https://github.com/xuneree/WildlifeDATA/blob/6b6dce785616f9b7244914a90a70a9dc365d12d6/docs/requirements/platform-requirements-v1_4.md)、[数据库 V1.5](https://github.com/xuneree/WildlifeDATA/blob/6b6dce785616f9b7244914a90a70a9dc365d12d6/docs/database/wildlife_database_design_v1_5.md)和[设计指南](https://github.com/xuneree/WildlifeDATA/blob/6b6dce785616f9b7244914a90a70a9dc365d12d6/docs/database/database_design_guide.md)为准；两级区域、项目授权、维护日期及周期边界、删除、回收统计、单段工作量等冲突规则已被新设计替代。新增生境历史、维护后参数、多段工作区间及工作组审批按新文档执行。
 
 版本：1.1 · 2026-10-15（V1.0 已审阅基线 + 批量录入工作方式补充）
 状态：V1.0 审阅决定保留；本轮新增事实为工作人员通常先在 Excel 整理同一回收批次的多个位点，再批量导入；批次页面交互方案尚在讨论。应用开发和数据库迁移尚未执行。
