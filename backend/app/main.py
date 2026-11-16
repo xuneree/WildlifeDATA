@@ -9,6 +9,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, create_model
 from sqlalchemy.exc import IntegrityError
 
+from app.cameras import install_camera_routes
 from app.db import get_engine
 from app.models import T, spec
 from app.security import hash_password, issue_token, read_token, verify_password
@@ -131,8 +132,6 @@ def dashboard(conn: DB, actor: User):
 
 # Only baseline resource endpoints are exposed; import and evidence tables are not writable via generic APIs.
 RESOURCES = {
-    "sites": "camera_site",
-    "deployments": "camera_deployment",
     "species": "species",
     "individuals": "individual",
 }
@@ -222,6 +221,9 @@ def install_resource(resource, table_name):
     app.add_api_route(
         f"/api/{resource}", creating, methods=["POST"], status_code=201, name=f"create_{resource}"
     )
+
+
+install_camera_routes(app, connection, user, admin, audit, build_input)
 
 
 for resource, table_name in RESOURCES.items():

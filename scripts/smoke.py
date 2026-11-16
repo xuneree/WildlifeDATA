@@ -24,4 +24,13 @@ request = Request(base + '/api/dashboard', headers={'Authorization': 'Bearer ' +
 with urlopen(request, timeout=10) as response:
     data = json.load(response)
     assert all(key in data for key in ('site_count', 'deployment_count', 'media_count', 'sites'))
-print('Functional smoke passed: frontend assets, PostGIS health, administrator login, authorized dashboard.')
+for resource in ('sites', 'deployments'):
+    request = Request(base + '/api/' + resource + '?limit=1', headers={'Authorization': 'Bearer ' + token})
+    with urlopen(request, timeout=10) as response:
+        rows = json.load(response)
+        assert isinstance(rows, list) and int(response.headers['X-Total-Count']) >= len(rows)
+request = Request(base + '/api/cameras/summary', headers={'Authorization': 'Bearer ' + token})
+with urlopen(request, timeout=10) as response:
+    summary = json.load(response)
+    assert all(key in summary for key in ('deployment_count', 'recorded_interval_days', 'issue_count'))
+print('Functional smoke passed: assets, PostGIS health, login, dashboard, camera lists/counts and summary.')

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
+import { CameraManagement } from './CameraManagement';
 
 type Row = Record<string, string | number | boolean | null>;
-type User = {display_name: string; username: string; role: string};
+type User = {display_name: string; username: string; role: string; can_view_coordinates: boolean};
 type Dashboard = {site_count: number; deployment_count: number; media_count: number; sites: Row[]; note: string};
 type Field = {key: string; label: string; type?: string; options?: string[]; optional?: boolean};
 const modules: Record<string, {label: string; columns: string[]; fields: Field[]}> = {
@@ -40,6 +41,7 @@ function App() {
   const generation = useRef(0);
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState('dashboard');
+  const [selectedSite, setSelectedSite] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -68,7 +70,7 @@ function App() {
       if (page === 'dashboard') {
         const data = await api('dashboard');
         if (request === generation.current) setDashboard(data);
-      } else {
+      } else if (page !== 'sites' && page !== 'deployments') {
         const data = await api(page);
         const related = page === 'deployments' ? await api('sites?limit=500') :
           page === 'individuals' ? await api('species?limit=500') : [];
@@ -117,17 +119,18 @@ function App() {
   return <div className="layout"><aside><div className="brand">WILDLIFE DATA</div><h2>红外相机<br/>数据管理平台</h2>
     <nav>{[['dashboard', '监测概览'], ...Object.entries(modules).filter(([key]) => key !== 'individuals' || user.role === 'admin')
       .map(([key, value]) => [key, value.label])].map(([key, title]) =>
-        <button className={page === key ? 'active' : ''} key={key} onClick={() => setPage(key)}>{title}</button>)}</nav>
+        <button className={page === key ? 'active' : ''} key={key} onClick={() => {setSelectedSite(''); setPage(key);}}>{title}</button>)}</nav>
     <div className="account">{user.display_name || user.username}<button onClick={logout}>退出登录</button></div>
   </aside><main><header><div><p className="eyebrow">华北豹长期监测 · 第一期初版</p><h1>{page === 'dashboard' ? '监测概览' : module.label}</h1></div>
-    <button className="secondary" disabled={busy} onClick={() => void load()}>刷新</button></header>
+    {page !== 'sites' && page !== 'deployments' && <button className="secondary" disabled={busy} onClick={() => void load()}>刷新</button>}</header>
     {error && <p className="error" role="alert">{error}</p>}{busy && <p role="status">正在处理…</p>}
     {page === 'dashboard' && dashboard && <><div className="stats">{[
       ['监测位点', dashboard.site_count], ['工作与回收周期', dashboard.deployment_count], ['媒体文件', dashboard.media_count]
     ].map(([title, count]) => <section key={title}><span>{title}</span><strong>{count}</strong></section>)}</div>
       <section className="panel"><h2>当前可访问位点</h2><Table rows={dashboard.sites} columns={modules.sites.columns}/></section>
-      <p className="notice">{dashboard.note}</p><p className="notice">当前版本提供基础建档和权限。媒体导入、XMP / Excel 导入、地图与繁殖工作区尚未实现。</p></>}
-    {module && <><section className="panel"><h2>记录列表 <small>（最多显示 100 条）</small></h2>
+      <p className="notice">{dashboard.note}</p><p className="notice">当前版本提供基础建档和权限。媒体导入、XMP / Excel 导入与繁殖工作区尚未实现。</p></>}
+    {(page === 'sites' || page === 'deployments') && <CameraManagement key={page} resource={page} token={token} isAdmin={user.role === 'admin'} canViewCoordinates={user.can_view_coordinates} onUnauthorized={logout} initialSiteId={selectedSite} onSiteCycles={id => {setSelectedSite(id); setPage('deployments');}}/>}
+    {module && page !== 'sites' && page !== 'deployments' && <><section className="panel"><h2>记录列表 <small>（最多显示 100 条）</small></h2>
       <Table rows={rows} columns={module.columns}/></section>
       {user.role === 'admin' && <section className="panel"><h2>新增{module.label}</h2><form className="fields" onSubmit={create}>
         {module.fields.map(field => <label key={field.key}>{field.label}{field.optional ? '（可选）' : ''}
@@ -137,7 +140,7 @@ function App() {
           </select> : field.options ? <select name={field.key}>{field.options.map(o => <option key={o} value={o}>{optionsLabel[o] || o}</option>)}</select> :
           <input name={field.key} type={field.type || 'text'} step={field.type === 'number' ? 'any' : undefined} required={!field.optional}/>}
         </label>)}<div className="actions"><button disabled={busy}>保存记录</button></div></form></section>}</>}
-    <footer>坐标按账号权限显示 · 所有新增业务记录保留审计日志</footer></main></div>;
+    <footer>坐标按账号权限显示 · 相机记录新增与修改均保留审计日志</footer></main></div>;
 }
 function Table({rows, columns}: {rows: Row[]; columns: string[]}) {
   if (!rows.length) return <p className="empty">暂无记录。管理员可通过下方表单建立基础档案。</p>;
