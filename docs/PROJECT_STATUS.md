@@ -16,7 +16,7 @@
 | 物种识别 Demo | [说明、源码和预览](demos/module04/README.md) |
 | 个体识别 Demo | [说明、源码和预览](demos/module05/README.md) |
 | 整合 Demo | [统一导航、来源和运行](demos/integrated/README.md) · [公开体验](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) |
-| 数据库设计 | [V1.5 结构草案](database/wildlife_database_design_v1_5.md)，首页列明与当前业务的待衔接范围 |
+| 数据库设计 | [V1.5 结构草案](database/wildlife_database_design_v1_5.md)，已按相机管理 V2.0 对齐；其他模块待衔接范围见首页 |
 | 正式实现 | [实施状态](implementation.md)及[验证记录](validation.md) |
 
 ## 当前进展
@@ -30,6 +30,6 @@
 ## 必要待办
 
 - 用户维护的 guide 尚需补入各模块需求末尾的建议文字；这些规则已确认，不因 guide 未回写而退回旧描述。
-- 正式数据/接口设计需衔接相机 V4.2、别名、安装/检查/撤回、自动周期、保留历史的删除与媒体引用；故障和有效工作量、其余批量模板仍待落实。
+- 相机数据库设计已按 V2.0 补齐 operation/camera_operation 命名、V4.2 字段及快照、自动周期、故障/校准、删除标记和 Excel 事务约束；正式 API、迁移及权限/文件服务尚未实现。有效工作量核实、媒体引用更正/重挂接口及生境/周期批量模板仍待设计。
 - 物种 Excel 的稳定匹配、人员/非动物标签、映射权限、更正事务，以及个体源观察、日期级校正、独立标记和档案匹配仍待正式设计。XMP 范围另行确认，不列为当前必验功能。
 - 后续按导航逐模块推进；影像文件管理、个体档案、查询统计和工作组/系统管理的详细设计尚未完成。权限、稳定 ID 和跨模块关系在正式开发前共同核对。

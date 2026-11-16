@@ -1,22 +1,22 @@
 # 红外相机数据管理平台数据库设计文档
 
-V1.5 · 结构基线：2026-11-06 · 适用范围说明对齐：2026-11-16 · PostgreSQL + PostGIS
+V1.5 · 相机管理结构对齐：2026-11-16 · PostgreSQL + PostGIS
 
-依据《database_design_guide.md》修订的一期结构草案。文档更新不表示程序、数据库迁移或生产数据已更新。当前业务以[总体需求](../requirements/platform-requirements-v1_4.md)及[模块需求入口](../requirements/README.md)为准；本草案尚不能直接作为三个当前 Demo 的完整落库契约。
+依据[数据库设计指南](database_design_guide.md)命名，并按[模块1-相机管理 V2.0](../requirements/module01-camera-management-v2_0.md)更新位点、生境调查、相机操作及布设周期设计。基准提交为 `d724f77b0707201e6795460a879b404dd8d08032`。本文描述正式落库方案，不表示后端、迁移或生产库已实现。
 
-当前待衔接范围（2026-11-16）：相机 V4.2 字段/秒参数、别名、安装/检查/撤回与自动周期、保留历史的删除及媒体引用；物种 Excel、非动物标签/映射授权及本 Excel 空独立值映射 FALSE；个体源观察、日期级校正、个体独立标记及档案匹配。下文原 XMP 专用表、install/collect/deactivate 枚举、以成功回收切周期和未引用才可直接删除等结构约束仍是待修订草案，不覆盖已确认业务。未衔接前不得直接照搬执行迁移或将 Demo 数据静默映射入库；具体映射与接口在正式开发阶段设计。
+相机管理已纳入稳定 ID、V4.2 字段、六位坐标、秒参数、自动周期、多段故障、校准、业务移除和位点/操作 Excel 事务约束。故障事实与有效工作量核实分开；正式有效工作量核实流程、媒体引用更正/重挂接口及生境/周期批量模板仍待设计。
+
+物种 Excel、非动物标签/映射授权及空独立值映射 FALSE，个体源观察、日期级校正、个体独立标记及档案匹配不属于本次结构更新；下文 XMP 专用结构仍是待替换/扩展草案，不覆盖当前[总体需求](../requirements/platform-requirements-v1_4.md)及[各模块需求](../requirements/README.md)。
 
 ## 1. 版本依据与范围
 
 ### 1.1 依据及冲突处理
 
-结构草案最初以[数据库设计指南](database_design_guide.md)、2026-11-06 工作组与申请审批规则及[总体需求 V1.4](../requirements/platform-requirements-v1_4.md)为依据。原指南读取自提交 `5c340b11ba41d2de739b8a1033bdbad4c01f883c`；当前已确认模块业务及待衔接范围见首页，不以旧草案否定后续确认。
+业务对象按 guide：group、project、location、camera、operation、deployment、media、annotation、species、individual。物理表沿用 work_group、camera_operation、camera_deployment 等 guide 表名。guide 由用户维护，本次不修改；其中操作类型、参数稀疏记录及周期字段的旧描述，按模块1 V2.0 已确认规则细化：安装/检查/撤回，操作后与周期起点保存完整配置快照，周期自动生成，故障与校准按需填写，不恢复人工确认字段。
 
-工作组是数据归属和人员授权单位，替代旧区域权限模型。项目直接继承工作组权限，一期不设项目级授权。管理申请由系统管理员审批；工作、只读申请由工作组管理员审批，系统管理员可代审。工作组管理员的任命、降级及撤销由系统管理员负责。
+工作组是数据归属和人员授权单位，项目继承工作组权限。管理申请及既有管理身份调整仅由系统管理员审批；工作/只读申请由工作组管理员或系统管理员审批，不得自审。
 
-同步指南新增的位点生境历史、维护后相机参数、精确坐标与下载权限，以及周期内故障恢复的样例。指南中仍残留的“区域”“项目-权限”及“工作组管理员审批所有等级”按本轮已确认规则修正。旧版一期个体关系、事件实体及固定选项字典表不恢复。
-
-文中“已确认”表示用户明确提出或接受的业务原则；“实现建议”表示落实该原则的字段、约束和事务方案；未知词表和真实数据样例仍须验证。本文为设计，不表示已迁移运行数据库。
+已确认业务与实现建议分开：本版字段名、支撑表、事务锁及索引是实现方案；未知历史不补造事实，未定工作量和媒体更正流程不写成已实现能力。
 
 ### 1.2 一期与后续边界
 
@@ -24,28 +24,11 @@ V1.5 · 结构基线：2026-11-06 · 适用范围说明对齐：2026-11-16 · Po
 
 一期不增加实体相机库存管理，不增加个体关系表。已有个体关系数据须归档保留。人工个体标注工具、繁殖记录、家域可视化和模板报告沿用后续规划；物种 AI 的交付阶段仍另定。RAI 仍保留一期设计支撑，但正式计算口径须先确定。
 
-### 1.3 相对 V1.4 的主要变化
+### 1.3 术语及设计边界
 
-| 主题 | V1.4 | V1.5 |
-| --- | --- | --- |
-| 数据组织 | 两级区域、位点 | 工作组承担数据归属和授权；工作组下项目与位点并列，通过 project_location 多对多关联 |
-| 相机含义 | 周期内 device_code 字符串 | camera 独立表示位点内机位，非实体设备 |
-| 现场记录 | 工作、现场维护及数据交接混在周期内 | camera_maintenance 保存维护及维护后型号、参数；周期保存起始配置快照 |
-| 周期状态 | 主要为已结束周期 | 支持开放周期、已闭合周期及未补齐边界的历史周期 |
-| 时间校准 | 媒体单独校准 | 周期统一秒偏移；历史媒体单独校准保留为优先覆盖值 |
-| 当前标签 | species_annotation、individual_occurrence | media_species、media_individual，保留导入来源及覆盖历史 |
-| 个体档案 | 主要为豹；代表图无结构化角度 | 支持豹、兔狲等物种；代表图有角度、部位，支持拼合图 |
-| 个体关系 | 一期 | 一期不纳入，历史数据归档 |
-| 账号权限 | admin/operator/viewer 与工作组范围 | system_admin/normal 账号类型；按工作组授权，项目直接继承 |
-| 素材标签 | 主要支撑未知个体标签 | 保留系统标签并补齐素材标签、标记人和素材描述字段 |
-| 独立拍摄 | 派生事件及成员表 | 不建事件实体，在 media 和 media_species 保存有明确口径的标记 |
-| 固定选项 | 各自独立字典表 | location 字段 + CHECK；变化的生境另存 location_habitat 时间序列 |
-| 人员审批 | 直接分范围授权 | 注册后申请工作组及等级，审批后生成有效成员；项目无独立授权 |
-| 有效工作 | 单段日期及故障恢复待明确 | deployment_work_interval 保存实际有效区间，故障恢复不再按整段跨度计算 |
+operation 表示现场相机操作，物理表为 camera_operation；类型固定为 install（安装）、check（检查）、withdraw（撤回）。更换相机、丢失重补、收卡换卡属于检查动作，不是新的操作类型。audit_log 记录登录账号的系统审计，与现场操作分开。
 
-### 1.4 本轮术语约定
-
-维护采用标准英文拼写 maintenance，统一使用 camera_maintenance。维护类型为安装 install、回收 collect、停用 deactivate；“回收”仅是维护类型，不再是与维护并列的业务实体。周期边界及媒体来源均引用维护记录。旧版术语仅允许出现在迁移对照中。
+deployment 表示机位两次操作之间的布设周期，物理表为 camera_deployment。周期闭合与取得媒体是两项独立事实；相机型号、条形码是操作/周期快照，不代表库存实体。旧对象名称仅在第 15 节用于迁移对照。
 
 ## 2. 业务对象与关系
 
@@ -53,12 +36,12 @@ V1.5 · 结构基线：2026-11-06 · 适用范围说明对齐：2026-11-16 · Po
 
 | 对象 | 定义及归属 | 例子 |
 | --- | --- | --- |
-| work_group | 数据归属和人员权限管理单位，业务指南称 group | 山西、西北、河北&北京等工作组；名称可沿用地名，不代表地理权限边界 |
+| group | 工作组，物理表 work_group；数据归属和人员权限管理单位 | 山西、西北、河北&北京等工作组；名称可沿用地名，不代表地理权限边界 |
 | project | 有明确目标的监测项目，只属于一个 work_group | 和顺常规监测、和顺 X337 |
 | location | 地理监测位置，只属于一个 work_group；可关联零个或多个同工作组 project | 701 |
 | camera | location 内稳定机位；更换实体相机不更换机位 ID | 701A、701B |
-| maintenance | 对 camera 的一次现场维护，包含安装、回收、停用操作，有批次 | 2026-10-01回收记录 |
-| deployment | 同一 camera 两次维护之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
+| operation | 对 camera 的一次现场相机操作，安装/检查/撤回；批次选填 | 2026-10-01 检查记录 |
+| deployment | 同一 camera 两次操作之间的布设周期，首次从安装起算 | 2026-08-01 至 2026-09-30 |
 | media | 一个原始视频或图片，只属于一个 deployment | IMG00001.MP4 |
 | annotation | 媒体与物种或个体的当前有效关联 | media_species、media_individual |
 | species | 全系统物种字典 | leopard |
@@ -68,7 +51,7 @@ V1.5 · 结构基线：2026-11-06 · 适用范围说明对齐：2026-11-16 · Po
 
 ### 2.2 核心实体关系图
 
-下图省略导入历史、素材标签、审计及代表图等支撑表；箭头代表外键关系，不代表数据必须按箭头顺序录入。
+下图省略标签导入历史、素材标签、审计及代表图等支撑表；箭头代表外键关系，不代表数据必须按箭头顺序录入。
 
 ```mermaid
 erDiagram
@@ -77,9 +60,9 @@ erDiagram
     project ||--o{ project_location : links
     location ||--o{ project_location : participates
     location ||--o{ camera : contains
-    camera ||--o{ camera_maintenance : records
+    camera ||--o{ camera_operation : records
     camera ||--o{ camera_deployment : has
-    camera_maintenance o|--o{ camera_deployment : boundary
+    camera_operation o|--o{ camera_deployment : boundary
     camera_deployment ||--o{ media : contains
     media ||--o{ media_derivative : derives
     media ||--o{ media_species : annotated
@@ -93,13 +76,18 @@ erDiagram
     work_group ||--o{ membership_application : receives
     location ||--o{ location_habitat : observes
     camera_deployment ||--o{ deployment_work_interval : works
+    camera_deployment ||--o{ deployment_fault_interval : faults
+    location ||--o{ location_attachment : attaches
+    location_habitat ||--o{ location_habitat_sign : records
+    work_group ||--o{ camera_import : imports
+    camera_import ||--o{ camera_import_item : contains
 ```
 
-camera_maintenance 作为周期边界具有两种具体外键：start_maintenance_id 和 end_maintenance_id。同一次回收可同时是上一周期结束与下一周期开始；新周期并不复制该维护记录。work_group_member 每行只对应一个用户与工作组，项目不再有授权行。
+camera_operation 作为周期边界具有两种具体外键：start_operation_id 和 end_operation_id。同一次检查可同时是上一周期结束与下一周期开始；新周期并不复制该相机操作。work_group_member 每行只对应一个用户与工作组，项目不再有授权行。
 
 ### 2.3 数据归属与项目关联
 
-project、location、individual 明确归属一个 work_group；机位、维护、布设、媒体、标签和生境记录通过稳定外键链继承归属，不逐行再授权。工作组内多个项目可共用一个位点及其媒体，不复制事实，跨项目汇总按主键去重。
+project、location、individual 明确归属一个 work_group；机位、相机操作、布设、媒体、标签和生境记录通过稳定外键链继承归属，不逐行再授权。工作组内多个项目可共用一个位点及其媒体，不复制事实，跨项目汇总按主键去重。
 
 成员权限覆盖所属工作组全部项目，也覆盖尚未关联项目的位点。project_location 仅用于业务组织和筛选，增加或停用关联不再改变成员权限。项目负责人不自动获得成员身份或管理权限。项目筛选仅决定查询范围，不是安全边界。
 
@@ -107,19 +95,21 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 
 ## 3. 命名、类型与通用约定
 
-表名用单数 snake_case。主键采用 UUID，不随业务编号变化。代码字段保持文本，保留前导零。相机机位统一使用 camera_code，实体设备型号使用 camera_model；不把型号当机位编号。
+表名用单数 snake_case。主键采用 UUID，不随业务编号变化。代码字段保持文本，保留前导零。camera 业务名沿用“相机”，含义为位点内机位；机位统一使用 camera_code，实体设备型号使用 camera_model；不把型号当机位编号。
 
-`DATE` 保存现场维护、布设和有效工作日期，不伪造午夜；`TIMESTAMPTZ` 保存媒体拍摄与审计时间点。媒体来源时区通过来源记录明确，未知时区不按服务器默认值猜测。界面按明确选择的时区展示。
+`DATE` 保存现场操作、布设和区间日期，不伪造时分；`TIMESTAMPTZ` 保存媒体拍摄与审计时间点。媒体来源时区通过来源记录明确，未知时区不按服务器默认值猜测。模块1业务日及校准输入按北京时间 Asia/Shanghai（UTC+8）解释，服务器时区不参与推断。
 
-除复合关联表外，业务表默认有 `id UUID PRIMARY KEY`、`created_at TIMESTAMPTZ NOT NULL DEFAULT now()`、`updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`；下方不重复列出。可变事实表另有 `row_version BIGINT NOT NULL DEFAULT 1`，用于导入预览后提交及人工更正的并发检查。导入历史、审计和已完成统计快照只追加，不原位修改内容。表中“必填”含数据库 NOT NULL；“可空”表示 NULL，不用空字符串、0 或虚构关联替代未知值。
+除复合关联表外，业务表默认有 `id UUID PRIMARY KEY`、`created_at TIMESTAMPTZ NOT NULL DEFAULT now()`、`updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`；下方不重复列出。可变事实表另有 `row_version BIGINT NOT NULL DEFAULT 1`，用于导入预览后提交及人工更正的并发检查。已办结导入内容、审计和已完成统计快照只追加，不原位修改；导入状态从预检到提交的受控变化单独审计。表中“必填”含数据库 NOT NULL；“可空”表示 NULL，不用空字符串、0 或虚构关联替代未知值。
 
-指南以 * 标明非必填。本版字段表进一步区分正常必填、条件必填和历史/未知可空：开放周期不要求结束信息，未复核不要求复核人，未知出生信息、坐标和工作量允许 NULL。这些可空处理沿用真实资料不完整时不造值的原则，属于实现建议；新在线录入是否强制坐标、生境等资料齐全，应在表单验收时确认，不能以虚构值满足约束。
+指南以 * 标明非必填。本版区分新录入必填、条件必填和历史/未知可空：开放周期不要求结束信息，未复核不要求复核人，未知历史坐标、出生信息和工作量允许 NULL 并保留来源。新在线录入及 Excel 按 V2.0 和当前表单统一校验，不通过历史补录标志绕过必填，不能以虚构值满足约束。
+
+location、location_habitat、camera_operation 使用 `deleted_at TIMESTAMPTZ NULL`、`deleted_by_id UUID NULL → app_user.id`、`deletion_reason TEXT NULL` 标记业务移除；标记与登录账号成对写入，通用 row_version 同步递增。查询必须同时检查自身及上游位点删除标记（历史查询除外），正常查询排除已删记录，历史/审计按权限读取；不存在旧编辑页直接恢复的接口。位点编号唯一性包含已删行，详见第 14.3 节。
 
 外键默认 RESTRICT/NO ACTION；业务实体不级联删除。每个外键须有适合访问路径的索引。坐标采用 WGS84；空间查询可使用 `ST_SetSRID(ST_MakePoint(longitude,latitude),4326)` 的 GiST 表达式索引。
 
 ## 4. 表清单
 
-本版一期模型含 27 张基础及支撑表、1 张可选 statistics_run 统计快照表，共 28 张表。相对先前 25 表稿新增 membership_application、location_habitat、deployment_work_interval；原 user_permission 改为 work_group_member。位点别名表仍未纳入；本表数不表示运行库已实现表数。
+本表清单包括本次相机管理新增的附件、动物痕迹、故障区间和业务导入支撑表。设计表清单不代表运行库已建表；statistics_run 仍为可选。
 
 | 分组 | 表 | 职责 |
 | --- | --- | --- |
@@ -128,10 +118,15 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 | 组织 | project_location | 项目—位点关联 |
 | 监测 | location | 地理位点及相对稳定信息 |
 | 监测 | location_habitat | 植被、动物痕迹、人为干扰的历史观察 |
+| 监测 | location_habitat_sign | 调查内可重复的物种/痕迹行 |
+| 监测 | location_attachment | 位点轨迹与照片的受控文件索引 |
 | 监测 | camera | 位点内机位 |
-| 监测 | camera_maintenance | 安装、回收、停用维护 |
+| 监测 | camera_operation | 安装、检查、撤回相机操作及操作后快照 |
 | 监测 | camera_deployment | 布设周期、起始配置快照及周期统一校准 |
-| 监测 | deployment_work_interval | 周期内实际有效工作区间 |
+| 监测 | deployment_fault_interval | 周期内多段故障事实 |
+| 监测 | deployment_work_interval | 已核实有效工作区间，核实流程待衔接 |
+| 导入 | camera_import | 位点/操作 Excel 预检与提交批次 |
+| 导入 | camera_import_item | 源行键、内容摘要、匹配和提交结果 |
 | 媒体 | media | 原始文件索引 |
 | 媒体 | media_derivative | 代理视频、缩略图、抽帧 |
 | 物种 | species | 全局物种字典 |
@@ -186,28 +181,32 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
-| work_group_id | UUID | 必填 | FK → work_group.id |
-| location_code | VARCHAR(20) | 必填 | 工作组内唯一，包含停用位点 |
-| grid_code | VARCHAR(50) | 可空 | 网格编号；文本保留前导零，非必填 |
-| longitude | DOUBLE PRECISION | 可空 | -180 至 180 |
-| latitude | DOUBLE PRECISION | 可空 | -90 至 90，与经度同时填写或同时为空 |
-| elevation_m | NUMERIC(8,2) | 可空 | 海拔米，可为合法负值 |
-| habitat_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束 |
-| terrain_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束 |
-| environment_type | VARCHAR(20) | 可空 | 固定代码选项，用 CHECK 约束；兼容旧字段 |
-| first_deployed_date | DATE | 可空 | 首次布设日期；已有可靠历史保留 |
-| track_storage_path | TEXT | 可空 | 轨迹文件受控存储键，不内嵌文件内容 |
-| notes | TEXT | 可空 | 说明 |
+| work_group_id | UUID | 必填 | FK → work_group.id，全局工作组上下文带入并由后端验证 |
+| location_code | TEXT | 必填 | 工作组内唯一，包含业务移除的位点，保留前导零 |
+| alias_name | TEXT | 可空 | 当前别名；修改保留审计，不作为外键或唯一匹配键 |
+| region_name | TEXT | 必填 | 区域，组内统计维度，不是工作组或权限对象 |
+| locality_name | TEXT | 可空 | 小地名 |
+| grid_code | VARCHAR(50) | 可空 | 网格编号，允许字母及前导零 |
+| set_by | TEXT | 必填 | 设置人员，可含无账号的现场人员 |
+| recorder_name | TEXT | 可空 | 野外记录人员，与登录账号分别保留 |
+| first_deployed_date | DATE | 必填（新录入） | 首次布设日期，不作为在位事实来源 |
+| longitude | NUMERIC(9,6) | 必填（新录入） | WGS84 十进制度，范围 [-180,180] |
+| latitude | NUMERIC(8,6) | 必填（新录入） | 范围 [-90,90]，与经度成对 |
+| elevation_m | NUMERIC(8,2) | 必填（新录入） | 海拔米，允许合法负值 |
+| habitat_type | VARCHAR(30) | 必填（新录入） | 相对稳定生境类型 |
+| terrain_position | VARCHAR(30) | 必填（新录入） | 地形位置 |
+| slope_aspect | VARCHAR(30) | 必填（新录入） | 坡向 |
+| slope_degrees | NUMERIC(5,2) | 必填（新录入） | 坡度，范围 [0,90] |
+| water_distance | VARCHAR(20) | 必填（新录入） | le_100m / gt_100m，对应 ≤100 m／＞100 m |
+| notes | TEXT | 可空 | 备注；不恢复其他生境说明、诱饵等已删除字段 |
 
-约束：UNIQUE(work_group_id,location_code)、UNIQUE(work_group_id,id)，坐标成对及范围 CHECK。位点表不保存单值“项目”列，由 project_location 查询项目列表。两项状态不作为 location 的手填事实列保存。
+设置 UNIQUE(work_group_id,location_code)、UNIQUE(work_group_id,id)，坐标成对和范围 CHECK。导入/接口先对原始坐标校验范围再四舍五入到六位；输入、保存、详情、Excel 和 KML/KMZ 坐标导出均补足六位，轨迹原文件不转换。未知历史可空并附迁移来源，新录入不设历史补录豁免，按当前表单条件校验。
 
-布设类型和位点启用状态是随时间变化的只读计算结果，不手填，也不固定在布设周期内。按查询时刻每个机位最后一条已知操作后的在位标记汇总：0 台为无布设/停用，1 台为单侧/启用，2 台为对拍/启用。故障、关机、收卡换卡和更换实体设备不等于撤机；撤回或确认丢失且未补装时不在位，丢失后补装恢复在位。丢失日期未知时只在实际检查日期记录已知结果，不倒推未知历史。
+项目选填、多选，仅通过 project_location 关联同组项目；不在位点保存单 project_id。当前别名用一个可空字段满足表单，别名变更审计可追溯；旧历史编号留稳定 ID 映射，完整历史编号维护流程不在本次新增。
 
-维护记录 is_deployed_after 表示操作完成后是否有相机在位，与 working_status_after 和有效工作区间独立。历史按实际操作日期及同日顺序计算，不按录入时间、周期内累计相机数或 open 周期数计算。当前 DATE 模型查询所选日期最后一次操作后的状态；同日多次操作按 maintenance_sequence 排序，不伪造小时分钟。没有记录时按已记录事实计为 0 台，但缺失操作历史不构成已核实的现场停用结论；没有位点编号时不显示计算结论。超过两台保持启用，布设类型显示待核查。
+**在位状态只读推导**：查询日期 D 默认取北京时间当天；在所属组/位点的每个 camera 中，从未删除且 operation_date≤D 的操作按 `(operation_date,operation_sequence)` 取最后一条，累加 is_deployed_after=true。故障、关机、换卡、换机仍算在位；撤回和丢失未补装不在位；丢失补装在位，未知丢失日期不倒推。0 台 none/inactive，1 台 single/active，2 台 paired/active，超过 2 台 unclassified/active（待核查）。
 
-只读视图/查询返回 deployment_type（none/single/paired/unclassified）、location_status（active/inactive）、camera_count 和 as_of。当前结果可缓存回底表以便展示，但缓存必须带计算日期及来源版本，只能由系统重算；不能接受人工写入，也不能用于替代历史操作。
-
-指南反馈位点改号较少，但可能存在别名；别名是否需要维护仍待确认，本版不预建 location_alias。已有旧位点编号在迁移映射与审计中保留，不能丢弃或当作新编号覆盖。若确认需要，按“稳定 location_id + 可追溯历史编号表”扩展，避免逗号拼接字段。
+输出 camera_count、deployment_type、location_status、as_of；不保存人工状态默认值，也不按周期数或媒体回收推断。反复检查不重复计数，未来操作不影响当天。无操作计 0 仅表示已记录事实，不能证明现场已核实停用；无位点编号不显示结论。删除位点不伪造撤回，历史状态仍可按授权追溯。
 
 ### 5.4 project_location｜项目—位点关联
 
@@ -223,126 +222,151 @@ project、location、individual 明确归属一个 work_group；机位、维护�
 
 以 (project_id,location_id) 为复合主键，无单独 id；通用 created_at/updated_at 保留。复合外键 (work_group_id,project_id) → project(work_group_id,id)、(work_group_id,location_id) → location(work_group_id,id) 防止跨工作组关联。变更 is_active 记录审计；重新关联复用该行。关联时间不是媒体访问起点。
 
-### 5.5 camera｜机位
+### 5.5 camera｜相机（位点内机位）
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | location_id | UUID | 必填 | FK → location.id |
-| camera_code | VARCHAR(20) | 必填 | 位点内机位编号，如 701A |
+| camera_code | TEXT | 必填 | 位点内机位编号，如 701A |
 | camera_status | VARCHAR(20) | 必填 / active | active / inactive，机位业务录入控制；不代表物理在位 |
 | notes | TEXT | 可空 | 机位说明 |
 
-约束：UNIQUE(location_id,camera_code)。机位非设备，无库存数量、采购、资产流转字段。型号记录在维护和周期；同机位换新实体相机沿用 camera.id。机位挪到新的地理位点须新建 ID，历史媒体不改挂。若未来加入实体资产模块，另建 camera_device 并关联周期，不改变 camera 的含义。
+约束：UNIQUE(location_id,camera_code)。机位非设备，无库存数量、采购、资产流转字段。型号记录在相机操作和周期；同机位换新实体相机沿用 camera.id。机位挪到新的地理位点须新建 ID，历史媒体不改挂。若未来加入实体资产模块，另建 camera_device 并关联周期，不改变 camera 的含义。
 
-### 5.6 camera_maintenance｜相机维护记录
+### 5.6 camera_operation｜相机操作记录
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
-| camera_id | UUID | 必填 | FK → camera.id；位点经 camera 推导 |
-| maintenance_date | DATE | 必填 | 现场维护日期 |
-| maintenance_sequence | INTEGER | 必填 / 1 | 同机位同日维护顺序，正整数 |
-| maintenance_type | VARCHAR(20) | 必填 | install / collect / deactivate |
-| maintenance_batch | VARCHAR(20) | 必填 | 本次维护批次；安装、回收、停用均填写 |
-| data_status | VARCHAR(20) | 条件可空 | collected / not_collected；无数据交接动作时为空 |
-| camera_model_after | VARCHAR(20) | 可空 | 维护后留在机位的相机型号；撤机可空 |
-| camera_parameters_after | JSONB | 可空 | 维护后相机参数；历史未记录为 NULL，不能猜默认参数 |
-| working_status_after | VARCHAR(20) | 必填 / unknown | normal / faulty / stopped / unknown |
-| is_deployed_after | BOOLEAN | 必填 | 维护后机位是否仍布有相机，不设猜测默认值 |
-| maintained_by | TEXT | 可空 | 现场工作人员姓名 |
-| recorded_by_id | UUID | 必填 | FK → app_user.id；录入账号，区别于现场人员 |
-| issue_type | VARCHAR(50) | 可空 | 异常类型；正常为空 |
-| issue_notes | TEXT | 可空 | 异常问题 |
-| maintenance_notes | TEXT | 可空 | 维护内容 |
-| notes | TEXT | 可空 | 其他说明 |
+| camera_id | UUID | 必填 | FK → camera.id，位点及工作组沿稳定 ID 推导 |
+| operation_date | DATE | 必填 | 实际现场操作日期 |
+| operation_sequence | INTEGER | 必填 | 同机位同日顺序，正整数，由服务端分配并发安全的稳定顺序 |
+| operation_type | VARCHAR(20) | 必填 | install / check / withdraw |
+| operation_batch | TEXT | 可空 | 自由文本，不校验编号格式；最近批次按当前工作组查询 |
+| operated_by | TEXT | 必填 | 现场操作人员 |
+| recorder_name | TEXT | 可空 | 现场记录人员，不是登录账号 |
+| recorded_by_id | UUID | 必填 | FK → app_user.id，真实录入账号 |
+| previous_operation_id | UUID | 可空 | 同机位此前有效操作；上次日期经此显示，不用日期文本匹配 |
+| camera_model_after | TEXT | 条件必填 | 安装/检查后设备型号；撤回保留所带入设备信息 |
+| camera_barcode_after | TEXT | 可空 | 实体设备条形码，不作为机位 ID |
+| camera_parameters_after | JSONB | 条件必填 | 版本化完整配置快照，契约见下文 |
+| field_status_before | VARCHAR(20) | 条件必填 | 检查/撤回现场状态：normal/off/damaged/lost/fallen/other；安装为空 |
+| field_status_note | TEXT | 条件可空 | 现场状态 other 必须说明 |
+| shooting_issues | TEXT[] | 可空 | 检查/撤回：none/empty_capture/battery_empty/settings_error/trigger_error/other；安装为空 |
+| issue_details | JSONB | 条件可空 | settings_error、trigger_error、other 对应的独立说明，按固定键校验 |
+| check_actions | TEXT[] | 条件可空 | 检查专用动作，安装/撤回为空 |
+| action_notes | TEXT | 可空 | 检查操作内容中的备注；other 动作须说明 |
+| withdrawal_reason | TEXT | 条件必填 | 撤回原因；其他类型为空 |
+| is_deployed_after | BOOLEAN | 必填 | 操作后实际在位结果，无猜测默认 |
 
-约束：UNIQUE(camera_id,maintenance_date,maintenance_sequence)，另设 UNIQUE(camera_id,id) 供周期复合外键。install 要求 is_deployed_after=true，deactivate 要求 false；collect 必须填写data_status 和维护批次，collected 必须有批次。deactivate 可同时记录回收；install 本版不同时表达回收，应先记录回收再安装。维护批次是分组代码，不是独立业务对象或唯一维护 ID，同机位同批次多次回收通过不同 maintenance.id 区分。
+约束：UNIQUE(camera_id,operation_date,operation_sequence)（包含删除行，不重用旧顺序）、UNIQUE(camera_id,id)；previous_operation_id 用同机位复合外键并检查时间顺序，作为系统维护的前序链；补录/更正/删除重算时同步更新，不接受客户端任意指定。install 强制在位 true，withdraw 强制 false；check 在丢失未补装时 false、丢失重补时 true，非丢失状态（含关机/损坏）保持 true。批次不是操作唯一键，也不要求填写；同机位同批次多次操作允许保存。
 
-collected 表示确实取回数据介质/数据，空卡或损坏仍为 collected，异常写说明。not_collected 表示回收尝试失败或未取回；不能据此假造已完成回收。问题类型沿用既有候选 sd_card_lost / camera_lost / camera_damaged / battery_depleted / other，词表最终以业务配置为准。
+检查动作固定为 card_exchange/battery_replace/angle_adjust/camera_replace/lost_replace/position_move/parameter_adjust/other，分别对应收卡换卡、更换电池、调整角度、更换相机、丢失重补、移动位置、参数调整、其他。安装填写型号、可选条形码及默认参数，不填操作前状态或检查动作；检查继承上次信息，只在更换/补装时开放设备字段，参数调整开放拍摄配置；撤回继承信息并填状态/原因，不填检查动作。服务端须拒绝越过动作条件修改配置，取消动作恢复上次值；无问题与异常互斥，不允许数组重复/未知代码。实际大幅地理迁移须新建 location/camera，不移动历史媒体。
 
-指南列出的位点编号和相机编号在视图中通过 camera.location_id 输出，不在本表重复保存易冲突的编号。批次只保存于维护表，媒体通过所属回收维护获得批次。
+配置快照采用带 `schema_version INTEGER=1` 的 JSONB，数据库 CHECK/统一校验函数与后端验证结构、类型、条件及允许值，不接受任意 JSON：
 
-相机参数使用带版本的字段契约校验；触发间隔、拍摄模式、视频时长、灵敏度等为待真实模板确认的候选字段，单位和枚举明确后统一校验，不接受任意 JSON 代替有效参数。参数写的是维护后的配置，原值由审计保留，撤机无留置设备可为空。
+| 快照键 | 规则 |
+| --- | --- |
+| mode | photo / video / photo_video |
+| photo_count | 照片或组合模式时为 1/2/3/5；新安装初值 1 |
+| video_seconds | 视频或组合模式时正整数秒；新安装默认 15 |
+| interval_seconds | 非负秒数，允许小数；新安装默认 10；旧分钟值原值×60 |
+| sensitivity | high / medium / low；新安装默认 medium |
+| side_pir | A323 必须为 BOOLEAN；其他型号可空，参数区仍可展示该项 |
+
+完整快照只记录实际操作后的有效值；未变更时继承前次，不给旧记录补新默认。型号必填、条形码选填，上次信息缺失时须补齐真实信息才能提交新操作，不豁免旧资料。撤回无留置设备，但保留带入快照以便追溯，不产生新周期。现场状态正常不清空已有故障，也不代表有效工作量已核实。
 
 ### 5.7 camera_deployment｜布设周期
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | camera_id | UUID | 必填 | FK → camera.id |
-| start_maintenance_id | UUID | 条件可空 | 起始维护；新建正常周期必填 |
-| end_maintenance_id | UUID | 条件可空 | 结束维护；开放周期为空 |
-| deployment_status | VARCHAR(20) | 必填 | open / closed / legacy_unknown |
-| camera_model | VARCHAR(20) | 可空 | 周期起始型号快照，来自起始维护后的型号 |
-| camera_parameters | JSONB | 可空 | 周期起始参数快照，来自起始维护的 camera_parameters_after |
-| deployment_start_date | DATE | 条件可空 | 布设开始日期，新周期必填 |
-| deployment_end_date | DATE | 条件可空 | 布设结束日期，closed 必填 |
-| effective_work_start_date | DATE | 可空 | 已核实工作区间的最早起点，受控汇总值 |
-| effective_work_end_date | DATE | 可空 | 已核实工作区间的最晚终点，受控汇总值 |
-| work_interval_verified | BOOLEAN | 必填 / false | 是否已确认有效工作区间完整、可采信；不是“跨度连续” |
-| work_verification_note | TEXT | 可空 | 工作量确认依据；确认从未有效工作时必填 |
-| time_offset_seconds | INTEGER | 可空 | 校准秒偏移，NULL=未校准，0=已确认无需偏移 |
-| time_offset_note | TEXT | 可空 | 校准依据与说明 |
-| time_offset_updated_by_id | UUID | 可空 | FK → app_user.id |
-| time_offset_updated_at | TIMESTAMPTZ | 可空 | 最后一次校准时间 |
-| independence_status | VARCHAR(20) | 必填 / pending | pending / ready / stale，当前周期独立拍摄标记是否可用 |
-| independence_rule_version | VARCHAR(100) | 可空 | 用于派生标记的默认规则版本，ready 时必填 |
-| independence_input_signature | VARCHAR(64) | 可空 | 媒体、时间和物种输入签名，ready 时必填 |
-| notes | TEXT | 可空 | 周期说明 |
+| start_operation_id | UUID | 条件必填 | 起始相机操作，正常自动周期必填 |
+| end_operation_id | UUID | 条件可空 | 结束操作，开放周期为空 |
+| deployment_status | VARCHAR(20) | 必填 | open / closed / needs_review / legacy_unknown |
+| deployment_start_date | DATE | 条件必填 | 从起始操作推导，不能独立修改 |
+| deployment_end_date | DATE | 条件可空 | 从结束操作推导，界面“回收日期”不表示取得文件 |
+| camera_model | TEXT | 条件必填 | 起点操作后的型号快照；周期表单不再要求输入 |
+| camera_barcode | TEXT | 可空 | 起点设备条形码快照 |
+| camera_parameters | JSONB | 条件必填 | 与起始操作操作后配置一致，冻结于本周期起点 |
+| fault_mode | VARCHAR(20) | 必填 / none | none / recorded，默认无故障不等于已核实工作量 |
+| calibration_camera_at | TIMESTAMPTZ | 成对可空 | 首条视频相机时间，输入按 UTC+8 解释 |
+| calibration_actual_at | TIMESTAMPTZ | 成对可空 | 对应实际时间，输入按 UTC+8 解释 |
+| time_offset_seconds | INTEGER | 可空 | actual-camera 的秒数；NULL 未校准，0 已填且无需偏移 |
+| time_offset_updated_by_id | UUID | 可空 | FK → app_user.id，系统记录真实修改账号 |
+| time_offset_updated_at | TIMESTAMPTZ | 可空 | 系统审计时间 |
+| time_offset_note | TEXT | 可空 | 历史校准来源说明 |
+| work_interval_verified | BOOLEAN | 必填 / false | 内部可信度门槛，禁止模块1表单/普通写接口直接设 true |
+| effective_work_start_date / effective_work_end_date | DATE | 可空 | 已核实有效区间的受控汇总，不作为跨度分母 |
+| work_verification_note | TEXT | 可空 | 后续核实流程的证据说明，不是新增人工确认框 |
+| independence_status | VARCHAR(20) | 必填 / pending | pending / ready / stale |
+| independence_rule_version | VARCHAR(100) | 可空 | ready 必填 |
+| independence_input_signature | VARCHAR(64) | 可空 | ready 必填 |
+| notes | TEXT | 可空 | 说明及待核对原因 |
 
-外键：用 (camera_id,start_maintenance_id) 与 (camera_id,end_maintenance_id) → camera_maintenance(camera_id,id) 保证同机位。start_maintenance_id 非空唯一，end_maintenance_id 非空唯一，允许同一个 maintenance.id 出现在上一周期 end 与下一周期 start。创建部分唯一索引 UNIQUE(camera_id) WHERE deployment_status='open'。
+复合外键 (camera_id,start_operation_id)/(camera_id,end_operation_id) → camera_operation(camera_id,id)。正常 open/closed 的起点、终点各自非空唯一；同一 operation 可作为前周期终点和后周期起点。UNIQUE(camera_id) WHERE deployment_status='open' 保证每机位最多一个开放周期。needs_review 保留失效边界和旧快照，不参与正常周期唯一边界约束或正式工作量。
 
-状态约束：open 要求 start_maintenance_id 和开始日期非空，end_maintenance_id 和结束日期为空；closed 要求两端维护及日期非空；legacy_unknown 只用于不能可靠重建边界的历史记录，新在线录入禁止使用。日期均在已知时检查先后，有效工作区间不得超出已知布设边界；work_interval_verified=true 表示区间集合完整、可采信；有区间时起止汇总必须一致，确认从未有效工作时集合可为空但必须有依据说明。校准偏移非空时，校准人、时间必填。independence_status=ready 时规则版本和输入签名必填，状态约束由 CHECK 落实。
+open 要求起点及开始日期非空、终点及结束日期为空；closed 要求两端操作及日期非空。两端必须同机位且按 `(operation_date,operation_sequence)` 严格有序，日期允许同日；不允许有序区间重叠。同日零日长周期仍保留事实，不伪造时分或推断当天媒体归属。legacy_unknown 仅保存有来源的历史不完整周期，在线新增/导入不能选择此状态绕过校验。
 
-开始、结束日期是边界维护日期的受控冗余，用约束触发器或同一事务服务核对，不能允许独立随意编辑。边界先后按“维护日期、同日顺序”比较；同一天允许上一周期结束和下一周期开始，因此不能用日期相等直接判为重叠。
-
-媒体归属布设周期使用 deployment_id。结束维护与回收维护通常相同，但停用后另行取卡时可能不同，故媒体另有 maintenance_id；二者不能混为一个概念。
+周期由操作生成，开放周期可查；关闭后可补故障和校准，允许无故障只校准。校准成对填写，秒差由系统计算、校验 INTEGER 范围并记录账号/时间；历史只有秒差时保留原值及来源，不伪造首条视频时间。字段快照可保留型号但界面不要求填写型号、判断依据、确认人或完整核实框。故障/校准更改使统计过期，不覆盖旧周期配置。
 
 ### 5.8 生境、地形等固定选项直接约束字段
 
-一期不建 terrain_option、habitat_option、environment_option 表。location 直接保存 habitat_type、terrain_type、environment_type 的稳定字符串代码；数据库按各字段允许值建立 CHECK 约束，前端下拉框和 Excel 校验从同一份版本化选项配置生成。数据库不保存“下拉框”，而是校验最终写入值。
+一期不建 terrain_option、habitat_option、environment_option 表。location 直接保存 habitat_type、terrain_position、slope_aspect、water_distance 的稳定字符串代码；数据库按各字段允许值建立 CHECK 约束，前端下拉框和 Excel 校验从同一份版本化选项配置生成。数据库不保存“下拉框”，而是校验最终写入值。
 
-采用 VARCHAR + CHECK 而非 PostgreSQL 原生 ENUM，便于后续经迁移修改选项。具体允许值尚未提供，本文件不编造词表或把示例当正式取值；实施时必须将已确认代码列表落实到 CHECK，不能只在前端限制。未知值报错；空值仍按字段的可空规则处理。
+采用 VARCHAR + CHECK 而非 PostgreSQL 原生 ENUM，便于后续经迁移修改选项。除本文及 V2.0 已列出的固定选项外，其他具体允许值尚未提供，本文件不编造词表或把示例当正式取值；实施时必须将已确认代码列表落实到 CHECK，不能只在前端限制。未知值报错；空值仍按字段的可空规则处理。
 
 固定且少量、随版本发布的选项不需要字典表。只有后续需要管理员在线增删、停用旧选项、排序或多语言等能力时，再考虑字典表；即使届时引入，也可使用一张带类别的统一字典，不必每个字段一张表。
 
-选项展示名修改不改变稳定代码。删除或改义旧代码前先检查历史值，不能在收紧 CHECK 前静默丢数据。原 vegetation_type 与新“生境类型”的语义须人工映射，原 environment_type 兼容保留；未核对的值归档待处理。
+选项展示名修改不改变稳定代码。删除或改义旧代码前先检查历史值，不能在收紧 CHECK 前静默丢数据。原 vegetation_type 与新“生境类型”的语义须人工映射，旧 environment_type 不直接映射为新地形位置；未核对的值归档待处理。
 
-### 5.9 location_habitat｜位点生境观察历史
+### 5.9 location_habitat｜生境调查历史
 
-location 保存坐标、地形及相对稳定的生境类型；本表按观察日期记录变化信息，不能用最新一次观察覆盖历史。
+调查可独立新增，不强制关联 operation。观察人、现场记录人员、登录账号分别保存；同日允许多次调查，以稳定 ID 区分。生境、动物痕迹、干扰共用 observed_date，不增加独立发现日期。
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
-| location_id | UUID | 必填 | FK → location.id，归属经位点继承 |
-| observed_date | DATE | 必填 | 实际观察日期，不用录入时间代替 |
-| vegetation_info | TEXT | 可空 | 植被状况 |
-| animal_signs | TEXT | 可空 | 动物痕迹 |
-| human_disturbance | TEXT | 可空 | 人为干扰 |
-| maintenance_id | UUID | 可空 | FK → camera_maintenance.id；随维护调查时关联，必须同位点 |
-| observed_by | TEXT | 可空 | 实地观察人 |
-| recorded_by_id | UUID | 必填 | FK → app_user.id，实际录入账号 |
-| notes | TEXT | 可空 | 方法、样例及其他说明 |
+| location_id | UUID | 必填 | FK → location.id |
+| observed_date | DATE | 必填 | 实际调查日期 |
+| observed_by | TEXT | 必填 | 调查人员 |
+| recorder_name | TEXT | 可空 | 现场记录人员 |
+| recorded_by_id | UUID | 必填 | FK → app_user.id，登录账号 |
+| vegetation_surveyed / animal_signs_surveyed / disturbance_surveyed | BOOLEAN | 必填 | 三个独立“未调查”标志，明确传入，不用空内容推断 |
+| tree_height_class / shrub_height_class / herb_height_class | VARCHAR(30) | 条件必填 | 高度分档；乔木/灌木以 m、草本以 cm 表示，保存所选档位代码 |
+| tree_canopy_class / shrub_cover_class / herb_cover_class | VARCHAR(30) | 条件必填 | 郁闭度、盖度百分比分档，保存档位代码，不伪造精确百分比 |
+| forest_origin | VARCHAR(30) | 条件必填 | primary/secondary/planted，对应原始/次生/人工 |
+| herb_type | VARCHAR(30) | 条件必填 | grass_dominant/non_grass_dominant，禾本科为主/非禾本科为主 |
+| disturbance_types | TEXT[] | 条件可空 | grazing/snare/electric_fence/vehicle/tree_theft/logging/tourism/herb_collecting/other |
+| disturbance_other_note | TEXT | 条件可空 | 干扰 other 必须说明 |
+| notes | TEXT | 可空 | 调查说明 |
 
-至少一项观察内容非空；NULL 表示未记录，明确未发现可填写“未见”，不能把两者混为一谈。同日可多次观察，不设 (location_id,observed_date) 唯一约束。按 (location_id,observed_date) 索引；历史更正保留前后审计。位置变化须建新位点，不以生境记录改变地理身份。
+植被高度及郁闭度/盖度在当前表单是分档下拉项，按 V4.2/当前表单选项映射稳定代码并用 CHECK 校验，不将区间中点或端点当作测量值；旧精确值保留来源待映射。植被已调查时三层高度、郁闭度/盖度、森林起源及草本类型按表单必填；未调查分区不参与必填，相关字段存 NULL、子行不得存在，导出为空；已调查按当前表单条件校验，空数组表示已调查未发现，不能与未调查混淆。允许三分区均未调查但基本信息完整，不保留旧“至少一项观察非空”约束。不增加树种、胸径或诱饵样本。修改/业务移除保留审计；最近调查按未删除行 observed_date、created_at、id 稳定排序。
+
+**location_habitat_sign｜动物痕迹行**：通用 id/时间/版本外，保存 habitat_id UUID → location_habitat.id、row_order INTEGER、species_name TEXT NOT NULL、species_id UUID NULL → species.id、trace_types TEXT[] NOT NULL。UNIQUE(habitat_id,row_order)，行序号正整数；物种名称不强制匹配全局字典、不自动建物种。trace_types 为非空无重复集合：direct/feces/feeding/footprint/den/claw/rubbing/hair/carcass（实体、粪便、食迹、足迹、卧穴、爪痕、蹭痕、毛发、尸体）。完全空白行不落库，部分填写拒绝；重复物种行允许，导出按行序。species_id 非空时须校验名称映射，不覆盖原调查文本。
 
 ### 5.10 deployment_work_interval｜有效工作区间
 
-指南确认周期内故障后修复虽少但存在，因此一期保存多段实际有效工作区间。单段正常工作也使用本表，统一计算方式。
+保留 guide 中多段有效工作区间的设计支撑，不将故障表直接改名为本表。字段为 deployment_id UUID FK、work_start_date DATE、work_end_date DATE、evidence_notes TEXT、verified_by_id UUID FK → app_user.id、verified_at TIMESTAMPTZ；均必填，另有通用 id/时间/版本与可空 notes。
+
+区间采用 `[work_start_date,work_end_date)`，CHECK(end>start)，限定在所属周期内且互不重叠。仅后续正式核实服务可写；模块1的“无故障”及保存现场正常的操作不能生成已核实区间或设置 work_interval_verified=true。既有闭区间历史须有来源和明确日界映射，不能直接重新解释。
+
+工作量来自完整、可采信区间的并集和查询裁剪。资料不完整时 verified=false，RAI 返回资料不足，不以周期首末跨度或故障补集代替核实。完整核实流程与统计日界尚待设计，不在当前表单增加判断依据、确认人或完整确认框。区间变更同步更新受控汇总、可信度及统计失效状态。
+
+### 5.11 deployment_fault_interval｜周期故障区间
 
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | deployment_id | UUID | 必填 | FK → camera_deployment.id |
-| work_start_date | DATE | 必填 | 有依据的有效工作开始日期 |
-| work_end_date | DATE | 必填 | 有依据的有效工作结束日期 |
-| evidence_notes | TEXT | 必填 | 有效工作与故障恢复的判断依据 |
-| verified_by_id | UUID | 必填 | FK → app_user.id，确认账号 |
-| verified_at | TIMESTAMPTZ | 必填 / now() | 确认时间 |
-| notes | TEXT | 可空 | 区间说明 |
+| fault_start_date | DATE | 必填 | 故障开始日期 |
+| recovery_date | DATE | 必填 | 恢复日期，作为排除端点 |
+| fault_notes | TEXT | 必填 | 故障说明 |
 
-CHECK(end>=start)，已知时不得超出布设日期；同一 deployment 内日期区间不重叠，可用按 deployment_id 与闭区间 daterange 的排斥约束或等效事务校验。日期型记录无法表达同日部分时间；不能伪造时刻，需依据已确认的日界规则或标记资料不足。
+CHECK(recovery_date>fault_start_date)，使用 `daterange(fault_start_date,recovery_date,'[)')`；同周期有效行以 GiST 排斥约束（btree_gist）或锁定周期的事务保证互不重叠、且不越出已闭合周期边界。相邻区间可相接；故障不改变 is_deployed_after。fault_mode=recorded 至少一段，none 无段，两者同事务校验。后续操作现场正常不得删除旧故障；显式更正/移除保留审计，不能以切换默认值静默清空。日期不明的历史保留原资料并标待核对，不造恢复日期。
 
-有效工作量来自已确认区间的并集及筛选裁剪，不从首末日期跨度推算。deployment 的 effective_work_start/end 是区间最早与最晚日期的受控汇总；区间修改使汇总、确认状态及统计快照在同一事务更新或失效。只有 work_interval_verified=true 才认可整个周期工作量。区间为空且未确认表示未知；为空且已确认、附有依据时表示明确未有效工作，分母为 0，RAI 仍不可计算。
+### 5.12 location_attachment｜位点现场附件
 
-故障恢复证据记录在工作区间及说明中；维护类型仍为安装、回收、停用，不为了补工作量伪造回收维护。独立维修日志及更细时间精度留待真实样例确定。
+每行保存 location_id UUID FK、attachment_type VARCHAR(10)（track/photo）、original_filename TEXT、storage_key TEXT（唯一受控键）、content_type TEXT、size_bytes BIGINT（非负）、uploaded_by_id UUID FK → app_user.id，均必填；另有可空 content_hash、通用 id/时间/版本及业务移除标记。轨迹和照片各最多 10 个有效文件，锁定位点后计数，不能只靠前端限制；照片预览为受控派生资源。
+
+原文件不内嵌数据库，不修改轨迹坐标或原始照片。移除附件保留索引/审计，位点移除保留全部附件；存储上传暂存、提交校验及失败清理采用可重试流程，不宣称数据库事务能回滚文件系统。读取、预览、KML/KMZ 坐标导出及 ZIP 打包逐次鉴权；轨迹原文件要求坐标与下载权限同时满足，导出脱敏不应泄露原文件。
 
 ## 6. 媒体、物种与标签数据字典
 
@@ -351,7 +375,7 @@ CHECK(end>=start)，已知时不得超出布设日期；同一 deployment 内日
 | 字段 | SQL 类型 | 要求 / 默认 | 说明 |
 | --- | --- | --- | --- |
 | deployment_id | UUID | 必填 | FK → camera_deployment.id |
-| maintenance_id | UUID | 可空 | FK → camera_maintenance.id；实际取得本文件的回收维护，历史不明可空 |
+| operation_id | UUID | 可空 | FK → camera_operation.id；实际媒体来源相机操作，历史不明可空 |
 | filename | TEXT | 必填 | 原始文件名 |
 | media_type | VARCHAR(10) | 必填 | video / image |
 | storage_path | TEXT | 必填 | 受控 NAS 路径或存储键，唯一 |
@@ -370,9 +394,9 @@ CHECK(end>=start)，已知时不得超出布设日期；同一 deployment 内日
 | is_independent_capture | BOOLEAN | 可空 / NULL | 文件级独立拍摄标记；TRUE=代表文件，FALSE=同组后续文件，NULL=未判定 |
 | notes | TEXT | 可空 | 文件说明 |
 
-maintenance_id 非空时必须为同机位且 data_status=collected 的维护；回收维护日期不早于文件所属已知周期的结束边界。停用关闭后才取卡，允许引用后来的成功回收维护。同一次回收类型维护可取得多个历史周期的文件，但每个媒体仍须明确一个拍摄周期。不能只按文件名或批次猜归属。
+operation_id 非空时表示实际媒体来源相机操作，必须同机位且未删除；是否确实取得本文件在媒体入库逐文件核对，不能由操作类型或周期闭合推定。空卡、损坏、未取回须在媒体来源核对中区分，不建立假媒体。撤回后另行取卡不伪造检查或新周期，具体来源交接结构待媒体模块设计；已有历史来源不明时允许 NULL 并保留来源说明。
 
-维护批次由 maintenance_id → camera_maintenance.maintenance_batch 推导，视图输出该字段，不在 media 再独立存一份。原文件拍摄时间沿用首次读取文件 mtime 的已有约定，新导入优先规则变化须单独确认；captured_time_source 的 metadata 值仅为明确采用元数据时的扩展，不静默改变默认来源。未知时间不排除媒体入库，但独立拍摄标记保留 NULL，不能把缺少时间视为“非独立”。
+操作批次由 operation_id → camera_operation.operation_batch 推导，可为空，不能强迫补批次或把批次当唯一媒体定位键。原文件拍摄时间沿用首次读取 mtime 的已有约定；来源变化须单独确认。未知时间可入库但独立标记保持 NULL，不视为非独立。
 
 有效拍摄时间为视图计算列 `effective_captured_at`，公式见第 11 节。不把跨表计算写成 PostgreSQL generated column，也不批量覆盖原始 captured_at。
 
@@ -668,17 +692,17 @@ system_admin 管理全系统，normal 的有效权限仅由当前 work_group_mem
 | 能力 | 系统管理员 | 本组管理 | 本组工作 | 本组只读 |
 | --- | --- | --- | --- | --- |
 | 查询、播放、查看统计 | 全部 | 本组 | 本组 | 本组 |
-| 新增及修改位点、生境、机位、维护、布设、参数与校准 | 全部 | 本组 | 本组 | 不允许 |
+| 新增及修改位点、生境、机位、相机操作、布设、参数与校准 | 全部 | 本组 | 本组 | 不允许 |
 | 导入媒体、物种/个体标签，维护本组档案及代表图 | 全部 | 本组 | 本组 | 不允许 |
 | 创建/停用本组项目，调整项目—位点关联 | 全部 | 本组 | 不允许 | 不允许 |
 | 审批本组工作/只读申请，管理普通成员 | 全部 | 本组 | 不允许 | 不允许 |
 | 任命、调整、撤销工作组管理员，审批管理申请 | 允许 | 不允许 | 不允许 | 不允许 |
-| 删除未引用的误建业务记录 | 全部 | 本组 | 不允许 | 不允许 |
+| 模块1位点/操作/调查业务移除（保留历史） | 全部 | 本组 | 本组 | 不允许 |
 | 查看精确坐标 | 全部 | 本组 | 本组 | 本组且坐标开关开启 |
 | 下载原始文件、打包、业务数据导出 | 全部 | 本组 | 本组且下载开关开启 | 本组且下载开关开启 |
 | 维护系统账号类型、固定工作组配置、全局物种及系统标签 | 允许 | 不允许 | 不允许 | 不允许 |
 
-所有删除仍受外键引用保护。项目负责人仅为业务字段；普通成员的只读下载不赋予业务写入权。人员管理中的“管理申请”不等于工作组管理员可以任命其他管理员。
+所有业务移除保留事实，引用保护和周期重算按第 10、14 节处理。项目负责人仅为业务字段；普通成员的只读下载不赋予业务写入权。人员管理中的“管理申请”不等于工作组管理员可以任命其他管理员。
 
 ### 9.3 注册和申请
 
@@ -706,41 +730,36 @@ system_admin 管理全系统，normal 的有效权限仅由当前 work_group_mem
 
 物种为全系统字典；个体档案及代表图按 individual.work_group_id 隔离，媒体关联个体须同组。现有全局稳定 UUID 及当前/历史编号唯一空间保留，不能因改工作组随意重建身份。跨组个体身份对照、代表图共享及档案转移尚未定义，一期不通过编号检索或关联自动共享；涉及历史跨组关联时由系统管理员核对迁移，不静默删除。
 
-生境记录随 location、有效工作区间随 deployment、原始及派生文件随 media 继承工作组归属。普通成员的首末拍、分布、下载及快照仅基于可见工作组数据计算。
+生境及附件随 location、故障及有效工作区间随 deployment、原始及派生文件随 media 继承工作组归属。普通成员的首末拍、分布、下载及快照仅基于可见工作组数据计算。
 
-## 10. 维护记录与布设周期的事务规则
+## 10. 相机操作与布设周期的事务规则
 
-### 10.1 周期边界
+### 10.1 自动周期与状态
 
-正常周期从安装开始，到成功回收或停用结束。中途成功回收后继续布设时，该回收维护结束上一周期并开启下一周期。仅回收尝试但未取回数据且继续布设，不切断周期；若随后停用，则以停用结束。该规则是对指南“两次回收期间”的实现细化，避免把未成功回收当成数据已交接。
+| 操作及结果 | 上一开放周期 | 新周期 |
+| --- | --- | --- |
+| install | 应不存在，否则拒绝并核对时间线 | 开启 |
+| check，仍在位（含故障/关机/换卡/换机/丢失补装） | 结束 | 开启 |
+| check，丢失未补装 | 结束 | 不开启 |
+| withdraw | 结束 | 不开启 |
 
-| 维护类型及结果 | 上一开放周期 | 新周期 | 说明 |
-| --- | --- | --- | --- |
-| install，维护后已布设 | 必须不存在，否则报冲突 | 开启 | 起点是安装维护 |
-| collect，collected，继续布设 | 结束 | 开启 | 同 maintenance 同时作为前后边界 |
-| collect，collected，撤机 | 结束 | 不开启 | 维护后 is_deployed_after=false |
-| collect，not_collected，继续布设 | 保持 | 不开启 | 失败尝试仍有现场记录 |
-| collect，not_collected，结束布设 | 结束 | 不开启 | 记录为何结束且未取回 |
-| deactivate | 若存在则结束 | 不开启 | 可同时记录成功或失败回收 |
-| 已停用后补做成功取卡 | 无需伪造开放周期 | 不开启 | 可供历史媒体引用实际 maintenance_id |
+检查不论取得文件是否成功均切周期；周期闭合不表示成功取得媒体。未补齐前序操作不能伪造安装：先补录真实历史；历史迁移无法重建时保留 legacy_unknown/待核对资料，不按新在线操作豁免。机位最多一个 open，按日期和同日顺序核对整个时间线；未来操作可形成计划日期后的边界，但当前在位仍仅查询当天及之前操作。
 
-同一机位最多一个 open 周期。维护后的相机型号用于新周期；上一周期保留其起始型号快照。正常周期中更换实体相机或改变校准基准，应以真实维护形成可追溯边界，不能用事后型号覆盖历史。若不是回收动作而是单纯维修，不能伪造 collect，有效工作证据按第 5.10 节记录。
+示例：701A 在 8 月 1 日安装 O1，9 月 30 日检查 O2 继续在位，即使空卡或未取回仍形成 D1(O1,O2)、D2(O2,开放)；10 月 31 日撤回 O3 后 D2(O2,O3)。O2 换机/改参数只影响 D2 起始快照，D1 不覆盖。9 月 30 日媒体不能仅凭 DATE 归入某周期，须核对来源上下文。
 
-### 10.2 日期示例
+### 10.2 新增、修改、补录与并发
 
-机位 701A：2026-08-01 安装 M1 → 2026-09-30 成功回收 M2 并继续布设 → 2026-10-31 停用 M3。
+锁定 location 和受影响 camera（多机位按 ID 稳定顺序），重验本组工作/管理权限、位点未删除、row_version 及条件字段；分配/验证同日顺序，模拟完整时间线。相机操作、周期生成/闭合、状态缓存失效和成功 audit_log 同事务。新位点“两步录入”最终一次提交 location、project_location、camera、首次安装及周期，不产生半份位点事实。
 
-形成 D1(start=M1,end=M2)、D2(start=M2,end=M3)。M2 的 camera_model_after 若变更为另一型号，只影响 D2。D1 的有效工作结束日期可以是 2026-09-27，不自动等于 9 月 30 日。2026-09-30 的媒体需要目录和回收上下文确认属于 D1 或 D2，不能凭 DATE 自动假定操作发生在零点。
+补录/修改按 `(operation_date,operation_sequence)` 重算受影响后缀，不按录入时间；保持未改变边界的 deployment.id。边界、型号快照、故障/校准有效范围变化时先显示影响并校验，不跨机位复用边界。已有媒体引用且影响其归属、周期边界或历史配置时，在正式更正/重挂流程完成前阻断；不自动拆分、合并或改挂媒体。普通导入不能覆盖历史更正。
 
-同日多次维护通过 maintenance_sequence 明确先后；不能用虚构时间点解决未知时刻。安装、结束日期只是边界日期，统计工作量仍需单独确认日界和纳入方式。
+任何冲突、权限变化、周期约束或审计失败全部回滚，输入由前端保留并支持重试。旧 row_version 或 deleted_at 非空的编辑请求拒绝，不通过 UPSERT 恢复已删操作。位点移除与新增操作共享父行锁，防止竞态写入已删位点。
 
-### 10.3 写入与更正
+### 10.3 删除与周期重算
 
-创建维护时锁定 camera 及当前开放周期，在同一事务内写 camera_maintenance、闭合旧周期、开启新周期和 audit_log。通过机位锁与开放周期唯一索引防止并发产生两个 open。周期不得跨不同机位引用维护，不能重叠复用同一个起点或终点。
+详情发起并二次确认对象和影响，服务端仍重新校验权限和版本。保存原操作及全部受影响周期快照，再标记操作删除并重算未删除操作时间线，与成功审计同事务。起点删除的空周期可从有效列表移除；正式库保留旧行并置 needs_review 或在审计中保存完整快照，不硬删被引用事实。有故障/校准的周期保留原 ID、内容及边界快照为 needs_review，不能自动迁移到另一周期或继续输出正式工作量。
 
-事后补录早期维护时，重新校验该机位时间线并预览受影响周期；已有媒体时不自动改挂或按日期自动拆分。确认后在同一更正事务更新引用和审计，标记受影响统计过期。结束维护被周期引用时禁止直接删除。
-
-位点启用/停用由相机在位记录计算，不提供人工启停位点的入口；不因故障或数据回收直接改成停用。机位若有独立的业务录入控制状态，不参与物理在位数量判断，也不删除历史或伪造撤回事实。允许历史补录，查询结果按实际操作日期及同日顺序重算。
+涉及媒体引用的周期变化在引用未解决时阻断，原操作不删除、不局部提交；正式人工更正/重挂接口另行设计。其他模块原始事实仍由外键保护。位点删除不逐项删除子表，详见第 14.3 节。
 
 ## 11. 时间校准与有效工作区间
 
@@ -763,27 +782,31 @@ END AS effective_captured_at
 
 独立拍摄判定及 RAI 使用有效时间；校准变更使对应周期 independence_status=stale，须重算标记。校准后旧统计保留原快照并标为过期，新查询重算，不能让旧结果静默代表新时间。
 
-### 11.2 多段有效工作与故障恢复
+### 11.2 故障、校准和有效工作量
 
-指南反馈山西周期内故障后恢复“极少，但是存在”，因此使用第 5.10 节 deployment_work_interval 保存实际有效区间。布设和结束维护日期不直接等于有效工作日期，也不能把最早与最晚工作日期之间的停机时间计入分母。
+模块1关闭周期的故障段采用 `[开始日,恢复日)`，可多段，禁止越界或重叠。无故障仍可填写校准；按 `实际时间−相机时间` 计算有符号秒差，两项输入统一按 UTC+8 解释。示例相机 10:00、实际 10:02，偏移 +120 秒；原始媒体拍摄时间保持不变。
 
-例如同一周期 8 月 1 日至 31 日，确认 1–10 日工作、11–19 日停机、20–31 日恢复，则保存两段工作区间；若统计规则按首尾日均计入，则工作量为 10+12=22 相机日。该例只演示多段求并集；首尾日、同日维护及对拍规则仍须业务确认。
+故障记录是事实，deployment_work_interval 是核实后的统计依据，不能互相冒充。例：周期 `[8月1日,9月1日)`、已知故障 `[8月11日,8月20日)`，只能记录这段已知故障；只有完整核实后，才可将 `[8月1日,8月11日)` 与 `[8月20日,9月1日)` 作为有效区间，按整日示例为 22 相机日。日界、同日部分工作与对拍口径仍须在统计流程确定。
 
-只有区间集合已完整核实，work_interval_verified 才为 true。只知部分日期、停机边界不明或跨周期重叠未处理时，保留媒体查询，但 RAI 返回资料不足。区间修改使统计快照过期；原始媒体及拍摄时间不改变。
+默认无故障、操作现场正常、周期结束、媒体回收均不能设置 work_interval_verified=true。证据不完整时媒体仍可查，正式有效工作量和 RAI 返回资料不足；不在模块1新增人工确认框。故障、校准或边界更正使区间可信度及统计快照失效，同事务更新，已有故障不会被后续正常检查清空。
 
 ## 12. 导入、更正与历史保留
 
-### 12.1 位点、机位与现场维护导入
+### 12.1 位点和相机操作 Excel
 
-使用工作组、项目、位点、机位的稳定代码与明确上下文匹配；项目关联另列处理，不在每次录入位点时覆盖项目列表。未知工作组、项目和固定选项报错；可按明确流程先建项目或机位，不按模糊文本偷偷创建。
+模板/预检/提交以工作组、稳定 location_id/camera_id 及明确业务编号映射为基础；位点编号保留前导零，日期 YYYY-MM-DD，多选以顿号分隔，每批最多 1000 条/10 MB。网格文本和选填批次不自动转数字。项目可空或多个，仅匹配同组已存在项目；引用不明确、已删位点、跨组对象或未知选项均报错，不模糊创建。
 
-维护导入按机位和维护顺序排序，在预校验中模拟周期衔接。同键同内容跳过，同键不同内容报冲突；普通批量导入不作为历史覆盖接口。一次成功提交的位点/维护、周期联动与审计须同事务。确认提交时重新核对当前权限、row_version、唯一性和开放周期，失败整批回滚。
+操作导入按机位、日期、同日顺序预演时间线和周期结果，使用与在线录入相同的必填及条件校验。相同键同内容幂等跳过，同键不同内容冲突；不同上传批次不得覆盖已有事实。正式行键为位点 `(work_group_id,location_code)`、操作 `(camera_id,operation_date,operation_sequence)`；模板未给同日顺序且存在多个候选时拒绝并提示明确映射，不以“同相机同批次一条”替代业务唯一性。外部稳定源行键的映射保存在 import item，重试不得重新分配顺序产生重复。
 
-新版不再以 (位点,机位,维护批次) 唯一约束代替维护 ID：同批次多次回收允许保存，但旧系统中存在的唯一约束需在数据迁移完成后明确移除。UI 若需防止误重复，可提示同机位同日同批次已有维护，不能阻止真实多次维护。
+**camera_import**：通用 id/时间/版本外，work_group_id UUID FK、import_type（location/operation）、source_filename TEXT、source_hash TEXT、template_version TEXT、idempotency_key TEXT、imported_by_id UUID FK、import_status（validated/completed/failed）、preview_signature TEXT、row_count INTEGER、result_summary JSONB；均必填，UNIQUE(work_group_id,idempotency_key)。相同请求键不同内容拒绝；completed 重试返回原结果。预检状态不表示已写业务。
+
+**camera_import_item**：camera_import_id UUID FK、row_number INTEGER、source_row_key TEXT、normalized_key JSONB、content_hash TEXT、normalized_data JSONB、item_status（pending/created/skipped/conflict/failed），必填；target_location_id/target_operation_id UUID FK、expected_row_version BIGINT、error_details JSONB 可空。UNIQUE(camera_import_id,row_number)、UNIQUE(camera_import_id,source_row_key)；目标 ID 与批次类型及工作组一致。内容摘要按版本化规范化值计算，不能含随机 UUID/录入时间导致同内容冲突。各批次通过目标唯一键、内容摘要和版本比较查重，不靠文件哈希一项认定业务相同。
+
+预检不写业务；正式提交重新验证全部权限、引用、删除状态、唯一键、row_version、文件/模板摘要及周期时间线，锁定受影响位点/机位。位点/操作、周期、item 成功结果、批次 completed 及成功审计整批同事务；任一错误整批不写。失败反馈可单独持久化 failed 批次/行，不保留成功业务或泄露无权内容。生境与周期批量模板尚待设计，不因本表存在而宣称支持。
 
 ### 12.2 原始媒体入库
 
-先明确 deployment_id，再核对实际回收维护、目录、文件路径和可选哈希。文件名和维护批次均不足以唯一定位媒体。未知周期的文件先留在导入暂存区，不创建假周期后当作完整事实。历史周期边界不明可按 legacy_unknown 显式保留可靠归属。
+先明确 deployment_id，再核对媒体来源相机操作、目录、文件路径和可选哈希。文件名和操作批次均不足以唯一定位媒体。未知周期的文件先留在导入暂存区，不创建假周期后当作完整事实。历史周期边界不明可按 legacy_unknown 显式保留可靠归属。
 
 同路径重复上传须幂等；不同路径相同哈希提示核查，不自动删除。首次拍摄时间及其来源冻结，后续 mtime 变化不静默覆盖。读取 NAS、媒体分析或代理生成失败要有可重试结果，数据库事务不能声称文件已可靠生成但存储文件不存在。
 
@@ -799,13 +822,13 @@ END AS effective_captured_at
 
 ## 13. 查询、独立拍摄标记与统计
 
-### 13.1 查询事实链与维护统计
+### 13.1 查询事实链与相机操作统计
 
 物种记录：media_species → media → camera_deployment → camera → location → work_group。项目范围通过有效 project_location 用 EXISTS 筛选，避免多项目关联展开后重复计数。
 
 个体记录：media_individual → individual，以及 media → 周期 → 机位 → 位点。个体出现只包含已确认身份；豹分布位点从豹物种标注查，不局限于有个体档案的媒体。未知个体不计入独立个体数。
 
-维护按 camera_maintenance.id 计数，维护类型分别统计安装、回收、停用。需要展示数据取回比例时，以有数据交接结果的维护记录为分母：collected / (collected + not_collected)，并列出维护类型范围；没有数据交接的安装不入分母。该比例不等于计划完成率，后者需要明确计划清单。跨项目共享维护按主键去重，无分母返回不可计算。
+相机操作按未删除的 camera_operation.id 计数，类型分别统计安装、检查、撤回，跨项目按主键去重。周期闭合与取得文件无等价关系，不从操作类型推算数据取回比例；计划完成率及媒体来源核对结果的统计另行设计。
 
 ### 13.2 取消独立事件实体
 
@@ -875,14 +898,18 @@ RAI = 某物种独立拍摄次数 / 有效相机工作日 × 100。分子来自�
 | project、location | 各自工作组内业务代码唯一；(work_group_id,id) 唯一 |
 | project_location | PK(project_id,location_id)；(location_id,project_id) WHERE is_active=true |
 | camera | UNIQUE(location_id,camera_code) |
-| camera_maintenance | UNIQUE(camera_id,maintenance_date,maintenance_sequence)；(maintenance_batch,maintenance_date) |
-| camera_deployment | 起始/结束维护非空唯一；每机位最多一条 open；(camera_id,deployment_start_date) |
-| media | UNIQUE(storage_path)；(deployment_id,captured_at)；(maintenance_id)；(individual_annotation_status)；file_hash 非空检索索引 |
+| camera_operation | UNIQUE(camera_id,operation_date,operation_sequence)；(operation_batch,operation_date)（批次非空检索，不唯一） |
+| camera_deployment | 正常周期起始/结束操作非空唯一；每机位最多一条 open；(camera_id,deployment_start_date) |
+| media | UNIQUE(storage_path)；(deployment_id,captured_at)；(operation_id)；(individual_annotation_status)；file_hash 非空检索索引 |
 | media_derivative | (media_id,derivative_type) |
 | media_species | UNIQUE(media_id,species_id)；(species_id,media_id)；来源 item 外键索引 |
 | media_individual | UNIQUE(media_id,individual_id)；(individual_id,media_id)；来源 item 外键索引 |
 | individual | UNIQUE(individual_code)；(work_group_id) |
-| location_habitat | (location_id,observed_date)；(maintenance_id) |
+| location_habitat | (location_id,observed_date,created_at) WHERE deleted_at IS NULL |
+| location_habitat_sign | UNIQUE(habitat_id,row_order)；(species_id) |
+| location_attachment | (location_id,attachment_type) WHERE deleted_at IS NULL；UNIQUE(storage_key) |
+| deployment_fault_interval | (deployment_id,fault_start_date)；同周期半开区间排斥约束 |
+| camera_import / camera_import_item | 请求键与源行键唯一；item 目标外键索引 |
 | deployment_work_interval | (deployment_id,work_start_date)；同周期不重叠约束 |
 | individual_profile、individual_alias | (individual_id)；代表图自身复合唯一；UNIQUE(alias_code) |
 | media_tag | UNIQUE(media_id,tag_id)；(tag_id,media_id) |
@@ -897,17 +924,19 @@ RAI = 某物种独立拍摄次数 / 有效相机工作日 × 100。分子来自�
 
 ### 14.2 不能只靠普通外键的检查
 
-以下由约束触发器或统一业务事务服务实现，并在后续迁移测试中覆盖：维护顺序与周期不重叠；周期日期与边界维护一致；媒体回收维护属于同机位且成功；来源 item 与当前标签同媒体且 success；代表图属于自身；个体物种与媒体物种一致；当前号与历史号跨表不冲突；独立标记与周期判定状态、规则版本及输入签名一致；审批者当下确有对应资格、不能自审且不能覆盖已改变的成员版本；生境关联维护同位点、有效工作区间同周期且不重叠。
+以下由约束触发器或统一业务事务服务实现，并在后续迁移测试中覆盖：操作顺序与周期不重叠；周期日期与边界操作一致；媒体来源相机操作属于同机位且引用有效；来源 item 与当前标签同媒体且 success；代表图属于自身；个体物种与媒体物种一致；当前号与历史号跨表不冲突；独立标记与周期判定状态、规则版本及输入签名一致；审批者当下确有对应资格、不能自审且不能覆盖已改变的成员版本；调查痕迹行属于同一调查、故障及有效工作区间各自同周期且不重叠；已删位点禁止新增/导入操作；类型条件字段、配置快照及操作后在位结果一致；导入请求与行键幂等、删除与周期重算及审计原子提交。
 
 复合外键、唯一索引和 CHECK 能覆盖的规则优先交给数据库，权限检查与可解释反馈由后端负责；不让前端成为唯一校验位置。
 
 ### 14.3 删除与历史
 
-位点、生境、机位、维护、周期、工作区间、媒体、个体、成员和来源批次被引用时禁止直接删除。误建且未引用的事实按第 9.3 节权限删除并审计。停用不释放业务编号，不改变历史归属；真实地理迁移须新建 location/camera，不把历史影像移到新地点。
+模块1的删除是可追溯业务移除。location、location_habitat、camera_operation 使用通用删除标记、账号、原因及 row_version；成功 audit_log 保存操作前后及受影响周期快照。组内 work/manage 可维护本组业务，只读不能写。删除不释放 location_code，不物理删除附件、调查、操作、周期或媒体引用；真实地理迁移仍须新建 location/camera。
 
-派生文件与独立拍摄标记可按明确策略重建，但不能借清理统计级联删除原始事实。当前标签替换不等于删除其历史；导入快照、编号变更与校准审计应保留。原始媒体删除涉及 NAS 文件和数据库引用，需单独有可恢复的业务流程，本设计不把 SQL 行删除等同于物理文件已清理。
+位点标记删除后从日常列表排除，全部子事实、附件和审计保留；禁止新增/导入操作，也不生成现场撤回事实。删除、并发校验及审计同事务，失败原记录保留。生境调查移除时子痕迹行随父记录隐藏并保留；不是级联物理删除。操作删除与周期重算遵循第 10.3 节；旧编辑请求拒绝复活已删行。已移除位点只开放有权限的历史查询，不开放普通业务新增/修改。
 
-## 15. 当前实现到工作组模型的迁移设计
+本次允许不改变媒体归属的位点业务移除；任何操作更正/删除导致已引用周期边界或归属变化，引用解决前阻断，不自动更正或级联删除媒体。正式媒体重挂接口与授权仍待设计。其他实体的直接删除仍受 RESTRICT/NO ACTION 保护；派生文件可按策略重建，但不能借清理统计删除原始事实。
+
+## 15. 当前实现到工作组及相机操作模型的迁移设计
 
 ### 15.1 实际运行库优先
 
@@ -924,7 +953,11 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 | 旧 user_permission、区域授权表 | work_group_member | 完整工作组授权经确认后映射；附加开关按原范围保留 |
 | 旧项目级授权 | 待重新审批的工作组申请 | 不直接扩大为整个工作组权限；未获批准不生成有效成员 |
 | camera_site、media_asset、species_annotation、individual_occurrence | location、media、media_species、media_individual | 保留稳定 ID 和关联，不只改表名而忽略 API |
-| 初稿 camera_visit 及旧 retrieval 外键 | camera_maintenance 及维护外键 | 仅对实际存在结构迁移；旧字段和真实操作证据完整归档 |
+| camera_visit、camera_maintenance 及旧 retrieval 外键 | camera_operation、start_operation_id/end_operation_id、media.operation_id | 保留稳定 ID 与旧快照，核对实际列和引用；不只替换名称 |
+| 旧 install/collect/deactivate、data_status | install/check/withdraw 及来源核对资料 | 按原始现场证据判断，不无条件把 collect 映射为检查、deactivate 映射为撤回；成功取卡不再控制切周期 |
+| 旧分钟间隔、稀疏配置 | 秒配置及完整操作后/周期起点快照 | 原分钟×60；无更改继承前次；缺失来源保持待核对，不能套新默认 |
+| 别名、轨迹/照片单路径、生境自由文本 | alias_name、location_attachment、结构化调查及痕迹行 | 保留原文、来源、坐标精度及稳定 ID；未调查/未发现不能互转 |
+| 旧删除行、旧周期及闭区间日期 | 删除标记、needs_review、半开区间 | 先保留快照和引用，核对日界及在位事实，不自动复活、硬删或移动媒体 |
 | 旧单段有效工作日期 | deployment_work_interval | 有证据才转成区间；未知保留未知，不默认认证整段工作 |
 | 旧相机参数与生境信息 | 参数快照及 location_habitat | 保留原内容及来源；未知观察日期不伪造，先归档待补录 |
 | 旧关系、繁殖或事件数据 | 历史只读归档 | 不因一期未采用相应表直接丢弃数据 |
@@ -937,7 +970,7 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 2. 建 work_group、work_group_member、membership_application 及新的可空兼容列。固定组配置由系统管理员确认，注册和导入不自动创建组。
 3. 保留 ID 映射业务归属，检查同组关联及组内唯一性；未确认数据暂由系统管理员处理，不把缺少工作组当作公开数据。
 4. 成员迁移逐账号比较访问范围；旧项目授权不升级为整组，管理身份须系统管理员确认，下载与坐标按已获范围迁移。停用、拒绝、撤回及历史申请不产生权限。
-5. 新增生境观察、维护后参数与多段有效工作区间。新增字段缺失不填虚构默认值；区间未经完整核实，工作量保持未知。
+5. 新增结构化生境调查、操作后参数、故障区间、附件与导入支撑表；改造自动周期及删除标记，保留核实后有效工作区间。新增字段缺失不填虚构默认值；区间未经完整核实，工作量保持未知。
 6. 同步 API、注册/审批页面、查询过滤、媒体及下载鉴权、导入模板、字段 CHECK、复合外键和并发审批约束，再切换服务。独立拍摄标记依原规则保留或失效重算。
 7. 按第 16 节使用真实账号、批次和故障恢复样例验收。备份及映射保留，观察完成后另定旧字段清理，不在文档修订时执行清理。
 
@@ -953,13 +986,13 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 | 把不同工作组的项目和位点关联 | 复合外键和业务校验拒绝 |
 | 组内 work 成员打开本组所有项目及未关联位点 | 均按 work 生效，无项目级授权 |
 | 用户 A 组 manage、B 组 read | 两组分别生效，管理身份不扩散到 B |
-| 组内 work 修改维护及周期、调用成员审批接口 | 本组业务修改允许；审批拒绝 |
+| 组内 work 修改操作及周期补充信息、调用成员审批接口 | 本组业务修改允许；审批拒绝 |
 | 工作组管理员审批 manage 申请或修改已有 manage 成员 | 拒绝，转系统管理员处理 |
-| 8 月安装、9 月回收继续、10 月停用 | 两周期共享中间 maintenance；旧周期型号不被新型号覆盖 |
+| 8 月安装、9 月检查继续、10 月撤回 | 两周期共享中间 operation；旧周期配置不覆盖 |
 | 两个请求并发开启同机位周期 | 最多一个 open，另一个收到可解释冲突 |
-| 同机位同批次真实两次回收 | 允许不同 maintenance，依维护日期和同日序号区分 |
-| 回收空卡或文件损坏 | collected，有异常说明；不伪造零工作量 |
-| 失败回收仍继续布设 | 保留原开放周期，不虚构成功回收 |
+| 同机位同批次真实两次检查 | 允许不同 operation，依操作日期和同日序号区分，批次可空 |
+| 检查空卡、文件损坏或未取回 | 仍闭合旧周期，在位则开启新周期；媒体来源单独核对 |
+| 故障、关机或丢失补装 | 检查切周期且仍在位；丢失未补装闭合且不开新周期 |
 | 周期偏移 +120 秒 | 原始时间保留；未单独覆盖媒体统一 +120 秒；旧统计过期 |
 | 已有绝对单文件校准 | 优先用该值，不再叠加周期偏移 |
 | 同一媒体多个物种或多个已知个体加未知 | 当前集合完整、无重复，unknown 不建立虚拟个体 |
@@ -967,7 +1000,7 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 | 同一只个体改号 | id 不变，旧号进入 alias，新旧号不与其他个体冲突 |
 | 导入无角度/部位的拼合图 | 默认 multi / whole_body；主图不能指向其他个体 |
 | 只知出生年份或跨年估计区间 | 不伪造月日，边界与年份保持一致 |
-| 同周期确认工作 1–10 日、20–31 日 | 保存两段区间；按首尾日计入的示例为 22 日，不计停机跨度 |
+| 周期默认无故障或现场正常 | 不生成已核实有效区间，不据此输出正式工作量 |
 | 故障恢复日期不明 | 可查媒体，工作量资料不足，不默认连续工作 |
 | 一期不使用个体关系 | 不出现一期新增关系流程，旧关系数据仍可追溯 |
 | 已撤权账号读取旧导入、代理 URL 或统计快照 | 重新鉴权，不能复用旧范围绕过权限 |
@@ -981,7 +1014,17 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 | read 开下载但未开坐标 | 可导出授权数据的脱敏版本；坐标和轨迹原文件不可泄露 |
 | work 未开下载 | 可以工作及播放预览，原始下载和业务导出被拒绝 |
 | 同位点先后两次植被/动物痕迹/干扰调查 | 新增两条带日期的生境记录，旧观察可追溯 |
-| 维护后调整相机参数并开启新周期 | 维护参数与新周期起始快照一致，旧周期快照不覆盖 |
+| 检查后调整相机参数并开启新周期 | 操作后配置与新周期起始快照一致，旧周期快照不覆盖 |
+| 坐标/网格/人员/别名 | 六位四舍五入及补零，网格保留前导零；记录人员可空，别名修改不换 ID |
+| 独立生境调查、全未调查、空痕迹行 | 可独立保存，未调查导出空；空行不落库，半填拒绝，不要求相机操作 |
+| 照片+视频、A323 PIR、取消动作 | 秒参数与条件校验正确；取消动作恢复原配置；旧分钟×60 |
+| 同日多次、补录及未来操作 | 按操作日期和同日顺序重算，当天数量不含未来，重复检查不多计 |
+| 故障越界/重叠/相接 | 越界及重叠拒绝，相邻半开区间允许；不清除既有故障 |
+| 无故障只校准，相机 10:00 实际 10:02 | UTC+8 得 +120 秒；不新增人工核实字段 |
+| 删除操作/位点及旧页提交 | 快照、周期重算、审计同成同败；位点编号不复用、历史保留，旧页不复活 |
+| 已有媒体引用下修改/删除边界 | 引用未解决时阻断，不自动改挂媒体 |
+| Excel 错误行、并发删除、同键重试 | 最多1000条/10 MB；提交复验，整批回滚，同内容跳过，不同内容冲突 |
+| 两请求同时为同位点上传第10/11个附件 | 父行锁串行校验，每种有效附件最多10个；原文件不转换 |
 
 以上是后续实施的验收要求，文档输出不代表已经运行这些业务测试。对本文件仅进行表清单、引用、示例和版本一致性校核。
 
@@ -990,17 +1033,17 @@ V1.4 和 V1.5 都是设计，不能据此假定运行库已具有相应表。实
 | 事项 | 最新反馈 | 本版处理 |
 | --- | --- | --- |
 | 实体相机库存 | 山西维护繁琐，一期暂不考虑 | 一期不建设库存；camera 仍是机位 |
-| 位点改号或别名 | 改号较少，可能存在别名 | 保留迁移映射和审计；别名维护需求仍待确认，不新增 location_alias |
-| 周期内故障恢复 | 极少但存在 | 纳入 deployment_work_interval，不再只保留单段起止 |
+| 位点别名 | V2.0 已确认可添加/修改 | alias_name 保存当前别名，稳定 ID 不变，审计留变更；完整历史改号流程待设计 |
+| 周期内故障恢复 | V2.0 支持多段故障 | deployment_fault_interval 保存故障事实，deployment_work_interval 仅保存核实后有效区间 |
 
 ### 16.3 待验证事项
 
-工作组完整固定配置及旧数据、成员映射；项目类型、地形和生境词表；相机参数真实模板与单位；生境调查样例及观察日期；故障恢复的区间证据、日界和对拍工作日规则；XMP/Excel 匹配、来源时区及 mtime 可靠性；跨组个体身份及代表图共享流程。项目继承工作组权限、管理申请的系统审批边界、坐标与下载开关不再列为未决规则。
+工作组完整固定配置及旧数据、成员映射；项目类型、地形和生境词表；V4.2 历史字段/参数的真实数据映射；生境调查历史样例及观察日期；故障恢复的区间证据、日界和对拍工作日规则；XMP/Excel 匹配、来源时区及 mtime 可靠性；跨组个体身份及代表图共享流程。项目继承工作组权限、管理申请的系统审批边界、坐标与下载开关不再列为未决规则。
 
 ## 17. 交付与版本说明
 
-本版完整替换旧版冲突的区域/项目授权模型，并同步工作组注册审批、生境记录、相机参数和多段工作量，保留未冲突的原始文件管理、稳定身份、导入快照、审计及可复现统计原则。当前只维护 Markdown；旧版 V1.3/V1.4 见[统一归档](../archive/README.md)。
+本版保留工作组授权及其他模块结构草案，按模块1 V2.0 同步业务对象命名、位点/生境、操作条件、自动周期、故障/校准、业务移除与 Excel 事务设计，保留未冲突的原始文件管理、稳定身份、导入快照、审计及可复现统计原则。当前只维护 Markdown；旧版 V1.3/V1.4 见[统一归档](../archive/README.md)。
 
-交付为数据库设计文档 V1.5，不包含已执行的迁移、API 改造或生产部署。后续代码实施须以真实运行库为基线，不能把设计文件中已描述的 28 张表当成已建库状态。
+交付为数据库设计文档 V1.5，不包含已执行的迁移、API 改造或生产部署。后续代码实施须以真实运行库为基线，不能把设计表清单当成已建库状态。
 
 参考：[camtrapR](https://cran.r-project.org/web/packages/camtrapR/index.html) 用于后续独立拍摄与工作量口径讨论；本版没有把其默认参数视为本项目已确认规则。

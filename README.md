@@ -7,9 +7,9 @@
 [公开体验三模块 Demo](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site) · [直接体验相机管理](https://wildlife-integrated-demo.golden-reed-8427.chatgpt.site/#/camera) · [源码与运行说明](docs/demos/integrated/README.md)。module01 已同步最新确认的 V4.2 字段、两月批次、页面布局及操作删除；该 Demo 使用浏览器本地数据，正式应用状态见下文。
 最新总体需求为[需求 V1.4（工作组及指南同步版）](docs/requirements/platform-requirements-v1_4.md)，当前维护文档仅提供 Markdown。
 `docs/requirements`、`docs/database`、`docs/design` 只保留当前有效文档；历史版本、旧附件与旧原型集中到[归档目录](docs/archive/README.md)，原路径不留占位文件。`docs/source` 保留当前 V4.2 字段依据原表。
-最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)是待衔接当前模块业务的结构草案；工作组及权限基础依据[设计指南](docs/database/database_design_guide.md)及用户确认：工作组承担数据归属和人员管理，项目继承组权限；普通账号申请工作组及等级，工作/只读由组管理员审批，管理由系统管理员审批。新增生境历史、相机参数、坐标/下载控制及多段有效工作区间，保留维护、媒体独立拍摄标记和字段固定选项。
+最新[数据库设计 V1.5](docs/database/wildlife_database_design_v1_5.md)已按相机管理 V2.0 更新结构方案，其他模块待衔接范围见文档首页；工作组及权限基础依据[设计指南](docs/database/database_design_guide.md)及用户确认：工作组承担数据归属和人员管理，项目继承组权限；普通账号申请工作组及等级，工作/只读由组管理员审批，管理由系统管理员审批。相机操作使用 camera_operation，支持安装/检查/撤回、配置快照、自动周期、故障/校准、删除留痕与 Excel 事务；有效工作量核实和媒体引用更正流程仍待设计。
 
-一期设计包括工作组/项目、共享位点与机位、生境、维护及布设、影像、标签导入、豹/兔狲档案和查询统计；一期不含个体关系或实体相机库存。二期沿用人工个体标注、繁殖、可视化与报告规划；素材库和物种 AI 另定。
+一期设计包括工作组/项目、共享位点与机位、生境、相机操作及布设、影像、标签导入、豹/兔狲档案和查询统计；一期不含个体关系或实体相机库存。二期沿用人工个体标注、繁殖、可视化与报告规划；素材库和物种 AI 另定。
 
 以上为设计目标；以下仍记录当前旧模型的实现能力，本轮未改动应用或执行迁移。原始附件、历史需求 V1.3 及旧数据库设计保留追溯。
 

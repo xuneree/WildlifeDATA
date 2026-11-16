@@ -7,7 +7,7 @@
 | 目录 / 文件 | 内容 |
 | --- | --- |
 | [requirements](requirements) | 总体需求及相机管理、物种识别、个体识别三个模块需求；导航和文档依据关系 |
-| [database](database) | 当前数据库结构草案 V1.5 和用户维护的数据库 guide，待衔接范围见草案首页 |
+| [database](database) | 数据库设计 V1.5（相机管理 V2.0 结构已对齐）和用户维护的数据库 guide；其余待衔接范围见设计首页 |
 | [design](design) | Ant Design 基准、列表规范、相机交互说明及使用场景 |
 | [demos/integrated](demos/integrated) | 三模块统一导航、运行和源码来源；独立模块仍在 demos/module01—03 维护 |
 | [source](source) | 当前字段依据：V4.2 野外记录表原件，保留原格式 |
